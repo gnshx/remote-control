@@ -24,6 +24,8 @@
   - [3. Focus & Play Smash Karts](#3-focus--play-smash-karts)
   - [4. Switch Between Controller Layouts & Profiles](#4-switch-between-controller-layouts--profiles)
   - [5. Customizing Key Mappings](#5-customizing-key-mappings)
+  - [6. 📐 HUD Customizer: Drag Positions & Edit Control Sizes](#6--hud-customizer-drag-positions--edit-control-sizes)
+  - [7. ⚡ Pro Assists: Auto-Gas, Turbo Rapid-Fire & Auto-Hold](#7--pro-assists-auto-gas-turbo-rapid-fire--auto-hold)
 - [🎮 Controller Layouts & Supported Game Types](#-controller-layouts--supported-game-types)
 - [🏗️ How We Built It & Technology Stack](#️-how-we-built-it--technology-stack)
   - [System Architecture Diagram](#system-architecture-diagram)
@@ -179,6 +181,36 @@ Want to use arrow keys, control a different game, or change button bindings?
 3. Tap any key field to change its key binding (e.g. change `FIRE` to `F` or `ENTER`).
 4. Toggle between **Hold** (held down while your finger touches the screen) and **Tap** (simulates a quick 50ms keystroke).
 5. Tap **Save** — changes are applied instantaneously to both phone and laptop agent without restarting!
+
+---
+
+### 6. 📐 HUD Customizer: Drag Positions & Edit Control Sizes
+
+Custom fit the controller to your hands and screen size!
+
+1. Tap **📐 Edit HUD** in the bottom controls bar.
+2. **Move Controls**: Touch and drag any control zone (Joystick, Action Buttons, Pedals, Steer buttons) anywhere across the screen. Real-time coordinate tags show exact offsets `(X, Y)`.
+3. **Resize Individual Controls**:
+   - Tap any control zone to select it (or pick it from the "Control" dropdown).
+   - Tap preset size buttons: **S (75%)**, **M (100%)**, **L (125%)**, or **XL (150%)**, or drag the Size slider from 60% to 180%!
+   - *Example: Make the Gas/Brake pedals XL for easy tapping, while keeping steering compact.*
+4. **Adjust Transparency & Overall Scale**:
+   - Use the **Opacity** slider (30% to 100%) to make controls translucent so you can see through them.
+   - Use the **Layout** scale slider to adjust the global size.
+5. Tap **✓ Done** — all your custom positions and sizes are automatically saved in local storage per layout!
+
+---
+
+### 7. ⚡ Pro Assists: Auto-Gas, Turbo Rapid-Fire & Auto-Hold
+
+Eliminate thumb fatigue during long gaming sessions:
+
+- **🚀 Auto-Gas (Hold W)**: Tap `🚀 Auto-Gas` to keep accelerating forward continuously without holding your finger down. Step on the brake pedal or steer backwards to automatically disengage!
+- **⚡ Turbo Rapid-Fire**: Tap `⚡ Turbo` to activate rapid-fire key pulsing. Click the Turbo button to cycle between **15 Hz**, **22 Hz (Ultra)**, and **8 Hz**. Perfect for shooting games and spamming weapons!
+- **🔒 Auto-Hold Mode**: 
+  - Turn ON `🔒 Auto-Hold` from the bottom bar: any button you tap locks ON immediately!
+  - **Double-Tap Lock**: Double-tap any button (like Drift, Gas, or Special) anytime to lock it down. A glowing neon lock icon `🔒` appears over the button. Tap again to release!
+- **🔄 Reset**: Tap `🔄 Reset` at any time to instantly release all held keys and clear all active auto-locks.
 
 ---
 

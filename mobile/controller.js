@@ -17,6 +17,7 @@ const app = {
   ble:              null,
   transportMode:    'ws',         // 'ws' | 'ble'
   connected:        false,
+  isOfflinePreview: false,
   seq:              0,
   pingTimer:        null,
   pingTimestamp:    0,
@@ -30,6 +31,13 @@ const app = {
   mappingManager:   null,
   joystick:         null,
   pendingProfile:   null,         // profile selected in mapping screen
+  cruiseControl:    false,        // auto-accelerate toggle
+  turboMode:        false,        // rapid fire toggle
+  turboSpeed:       15,           // Hz: 8, 15, 22
+  turboPulse:       true,
+  turboInterval:    null,
+  autoHoldMode:     false,        // when true, single tap locks any button held down
+  autoHoldControls: new Map(),    // control -> { key, el }
 };
 
 // ─── DOM Refs ─────────────────────────────────────────────────────────────────
@@ -49,11 +57,13 @@ const DOM = {
   serverIp:          $('server-ip'),
   serverPort:        $('server-port'),
   connectBtn:        $('connect-btn'),
+  previewBtn:        $('preview-btn'),
   connectError:      $('connect-error'),
   connectBtnText:    document.querySelector('#connect-btn .btn-text'),
   connectBtnLoader:  document.querySelector('#connect-btn .btn-loader'),
   connectionDot:     $('connection-dot'),
   connectionLabel:   $('connection-label'),
+  quickConnectBtn:   $('quick-connect-btn'),
   latencyDisplay:    $('latency-display'),
   profileNameDisplay:$('profile-name-display'),
   seqNum:            $('seq-num'),
@@ -63,6 +73,14 @@ const DOM = {
   settingsBtn:       $('settings-btn'),
   resetBtn:          $('reset-btn'),
   vibrateBtn:        $('vibrate-btn'),
+  cruiseBtn:         $('cruise-btn'),
+  turboBtn:          $('turbo-btn'),
+  autolockBtn:       $('autolock-btn'),
+  editHudBtn:        $('edit-hud-btn'),
+  hudCruise:         $('hud-cruise'),
+  hudTurbo:          $('hud-turbo'),
+  hudAutohold:       $('hud-autohold'),
+  hudLockedContainer:$('hud-locked-container'),
   openMappingBtn:    $('open-mapping-btn'),
   mappingBackBtn:    $('mapping-back-btn'),
   saveMappingBtn:    $('save-mapping-btn'),
@@ -108,15 +126,29 @@ function showScreen(id) {
 
 // ─── Multi-Transport: WebSocket & Bluetooth LE ──────────────────────────────
 function connectWs() {
-  let ip   = DOM.serverIp.value.trim();
-  const port = DOM.serverPort.value.trim() || '8765';
+  let ip = DOM.serverIp.value.trim();
+  let port = DOM.serverPort.value.trim() || '8765';
+
+  // Sanitize IP address (strip http://, ws://, trailing slash, path, extra colons)
+  ip = ip.replace(/^(https?|wss?):\/\//i, '').replace(/\/.*$/, '').trim();
+  if (ip.includes(':')) {
+    const parts = ip.split(':');
+    ip = parts[0];
+    if (parts[1]) {
+      port = parts[1];
+      DOM.serverPort.value = port;
+    }
+  }
 
   if (!ip && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
     ip = window.location.hostname;
     DOM.serverIp.value = ip;
   }
 
-  if (!ip) { showError('Please enter the laptop IP address.'); return; }
+  if (!ip) {
+    showError('Please enter the laptop IP address (e.g. 192.168.1.10). Or tap "Preview Offline" to test controls!');
+    return;
+  }
 
   const url = `ws://${ip}:${port}`;
 
@@ -132,7 +164,7 @@ function connectWs() {
   const connectTimeout = setTimeout(() => {
     if (!app.connected && app.ws && app.ws.readyState !== WebSocket.OPEN) {
       try { app.ws.close(); } catch (_) {}
-      showError(`Connection timed out (${ip}:${port}). Verify phone and laptop are on same Wi-Fi.`);
+      showError(`Connection timed out (${ip}:${port}). Verify phone and laptop are on same Wi-Fi. (Tip: Try "Preview Offline" below!)`);
       resetConnectBtn();
     }
   }, 6000);
@@ -150,6 +182,7 @@ function connectWs() {
   app.ws.onopen = () => {
     clearTimeout(connectTimeout);
     app.connected = true;
+    app.isOfflinePreview = false;
     resetConnectBtn();
 
     send({ type: 'HELLO', profile: app.mappingManager.activeProfileId, seq: ++app.seq });
@@ -252,11 +285,23 @@ function disconnect() {
   } else if (app.transportMode === 'ble' && app.ble) {
     app.ble.disconnect();
   }
+  app.connected = false;
+  app.isOfflinePreview = false;
   stopPing();
   stopStateLoop();
   releaseAllKeys();
   setConnectionUI(false);
   showScreen('connect-screen');
+}
+
+function startOfflinePreview() {
+  app.connected = false;
+  app.isOfflinePreview = true;
+  showScreen('controller-screen');
+  setConnectionUI(false, 'Offline Preview');
+  startStateLoop();
+  toast('🎮 Offline Mode: Test controls, auto-press & customize HUD sizes!', 'success', 3500);
+  vibrate([30, 20]);
 }
 
 function send(obj) {
@@ -318,19 +363,32 @@ function stopStateLoop() {
   app.stateTimer = null;
 }
 
-// ─── Key State Management ─────────────────────────────────────────────────────
+// ─── Key State Management & Pro Assists ───────────────────────────────────────
 function buildCurrentKeys() {
-  const mapping = app.mappingManager.activeMapping;
+  const mapping = app.mappingManager?.activeMapping;
+  if (!mapping) return new Set();
   const keys = new Set();
 
-  // Joystick → keys
+  // 1. Cruise Control: Auto-Gas forward
+  if (app.cruiseControl && mapping.move_up?.key) {
+    keys.add(mapping.move_up.key);
+  }
+
+  // 2. Joystick → keys
   if (app.joystickDirs.has('up'))    keys.add(mapping.move_up?.key);
   if (app.joystickDirs.has('down'))  keys.add(mapping.move_down?.key);
   if (app.joystickDirs.has('left'))  keys.add(mapping.move_left?.key);
   if (app.joystickDirs.has('right')) keys.add(mapping.move_right?.key);
 
-  // Button keys
-  for (const k of app.buttonKeys) keys.add(k);
+  // 3. Button keys (with Rapid-Fire Turbo pulsing)
+  for (const k of app.buttonKeys) {
+    const isActionKey = (k === mapping.fire?.key || k === mapping.special?.key || k === mapping.item?.key);
+    if (app.turboMode && isActionKey) {
+      if (app.turboPulse) keys.add(k);
+    } else {
+      keys.add(k);
+    }
+  }
 
   // Remove null/undefined
   keys.delete(undefined);
@@ -338,6 +396,156 @@ function buildCurrentKeys() {
 
   return keys;
 }
+
+function startTurboPulse() {
+  stopTurboPulse();
+  const speed = app.turboSpeed || 15;
+  const intervalMs = Math.round(1000 / speed);
+  app.turboInterval = setInterval(() => {
+    if (app.turboMode && (app.buttonKeys.size > 0 || app.autoHoldControls.size > 0)) {
+      app.turboPulse = !app.turboPulse;
+      sendCurrentState();
+    }
+  }, intervalMs);
+}
+
+function stopTurboPulse() {
+  if (app.turboInterval) {
+    clearInterval(app.turboInterval);
+    app.turboInterval = null;
+  }
+  app.turboPulse = true;
+}
+
+function toggleCruiseControl(forceState) {
+  const newState = forceState !== undefined ? forceState : !app.cruiseControl;
+  app.cruiseControl = newState;
+
+  if (DOM.cruiseBtn) {
+    DOM.cruiseBtn.textContent = app.cruiseControl ? '🚀 Auto-Gas: ON' : '🚀 Auto-Gas: OFF';
+    DOM.cruiseBtn.classList.toggle('active-cruise', app.cruiseControl);
+  }
+  if (DOM.hudCruise) {
+    DOM.hudCruise.classList.toggle('hidden', !app.cruiseControl);
+    DOM.hudCruise.classList.toggle('active', app.cruiseControl);
+  }
+
+  if (app.cruiseControl) {
+    toast('🚀 Auto-Gas ON (Continuous Throttle)', 'success');
+    vibrate([30, 20, 30]);
+  } else if (forceState === undefined) {
+    toast('🛑 Auto-Gas OFF');
+    vibrate([15]);
+  }
+
+  sendCurrentState();
+}
+
+function toggleTurboMode(forceState) {
+  // If forceState is boolean, apply it. Otherwise cycle: OFF -> 15Hz -> 22Hz -> 8Hz -> OFF
+  if (typeof forceState === 'boolean') {
+    app.turboMode = forceState;
+  } else {
+    if (!app.turboMode) {
+      app.turboMode = true;
+      app.turboSpeed = 15;
+    } else if (app.turboSpeed === 15) {
+      app.turboSpeed = 22;
+    } else if (app.turboSpeed === 22) {
+      app.turboSpeed = 8;
+    } else {
+      app.turboMode = false;
+    }
+  }
+
+  if (DOM.turboBtn) {
+    DOM.turboBtn.textContent = app.turboMode ? `⚡ Turbo: ${app.turboSpeed}Hz` : '⚡ Turbo: OFF';
+    DOM.turboBtn.classList.toggle('active-turbo', app.turboMode);
+  }
+  if (DOM.hudTurbo) {
+    DOM.hudTurbo.textContent = `⚡ TURBO (${app.turboSpeed}Hz)`;
+    DOM.hudTurbo.classList.toggle('hidden', !app.turboMode);
+    DOM.hudTurbo.classList.toggle('active', app.turboMode);
+  }
+
+  if (app.turboMode) {
+    startTurboPulse();
+    toast(`⚡ Rapid Fire Turbo: ${app.turboSpeed} Hz`, 'success');
+    vibrate([20, 20, 20]);
+  } else {
+    stopTurboPulse();
+    if (forceState === undefined) toast('⚡ Turbo Mode OFF');
+    vibrate([15]);
+  }
+
+  sendCurrentState();
+}
+
+function toggleAutoHoldMode(forceState) {
+  app.autoHoldMode = forceState !== undefined ? forceState : !app.autoHoldMode;
+  if (DOM.autolockBtn) {
+    DOM.autolockBtn.textContent = app.autoHoldMode ? '🔒 Auto-Hold: ON' : '🔒 Auto-Hold: OFF';
+    DOM.autolockBtn.classList.toggle('active-autolock', app.autoHoldMode);
+  }
+  if (DOM.hudAutohold) {
+    DOM.hudAutohold.classList.toggle('hidden', !app.autoHoldMode);
+    DOM.hudAutohold.classList.toggle('active', app.autoHoldMode);
+  }
+
+  if (app.autoHoldMode) {
+    toast('🔒 Auto-Hold ON: Tap any button to lock hold', 'success');
+    vibrate([30, 20, 30]);
+  } else {
+    toast('🔒 Auto-Hold Mode OFF (Tap locked button to release)');
+    vibrate([15]);
+  }
+}
+
+function toggleControlAutoLock(control, el) {
+  const mapping = app.mappingManager?.activeMapping;
+  if (!mapping) return;
+  const key = mapping[control]?.key;
+  if (!key) return;
+
+  if (app.autoHoldControls.has(control)) {
+    // Unlock
+    app.autoHoldControls.delete(control);
+    el?.classList.remove('is-autolocked', 'pressed');
+    app.buttonKeys.delete(key);
+    toast(`🔓 Released: ${control.toUpperCase()}`);
+    vibrate([15]);
+  } else {
+    // Lock
+    app.autoHoldControls.set(control, { key, el });
+    el?.classList.add('is-autolocked', 'pressed');
+    app.buttonKeys.add(key);
+    toast(`🔒 Auto-Locked: ${control.toUpperCase()} (${key})`, 'success');
+    vibrate([35, 20, 35]);
+  }
+  updateLockedHUD();
+  sendCurrentState();
+}
+
+function updateLockedHUD() {
+  if (!DOM.hudLockedContainer) return;
+  DOM.hudLockedContainer.innerHTML = '';
+  app.autoHoldControls.forEach((item, ctrl) => {
+    const pill = document.createElement('span');
+    pill.className = 'hud-locked-pill';
+    pill.textContent = `🔒 ${item.key} ×`;
+    pill.title = 'Tap to unlock';
+    pill.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleControlAutoLock(ctrl, item.el);
+    });
+    DOM.hudLockedContainer.appendChild(pill);
+  });
+}
+
+window.toggleCruiseControl = toggleCruiseControl;
+window.toggleTurboMode = toggleTurboMode;
+window.toggleAutoHoldMode = toggleAutoHoldMode;
+window.toggleControlAutoLock = toggleControlAutoLock;
 
 function sendCurrentState() {
   const keys = buildCurrentKeys();
@@ -351,13 +559,27 @@ function sendCurrentState() {
     ts:   Date.now(),
   });
 
-  DOM.seqNum.textContent = app.seq;
+  if (DOM.seqNum) DOM.seqNum.textContent = app.seq;
 }
 
 function releaseAllKeys() {
   app.joystickDirs.clear();
   app.buttonKeys.clear();
   app.pressedKeys.clear();
+
+  // Clear all auto-locks
+  app.autoHoldControls.forEach(item => {
+    item.el?.classList.remove('is-autolocked', 'pressed');
+  });
+  app.autoHoldControls.clear();
+  updateLockedHUD();
+
+  if (app.cruiseControl) toggleCruiseControl(false);
+
+  // Remove pressed state from all action buttons
+  document.querySelectorAll('.action-btn, .pedal, .steer-btn, .dpad-dir, .diamond-btn, .big-action-btn, .big-steer-btn, .race-aux-btn')
+    .forEach(b => b.classList.remove('pressed', 'is-autolocked'));
+
   updateHUD(new Set());
   send({ type: 'RESET', seq: ++app.seq });
 }
@@ -396,9 +618,16 @@ function setConnectionUI(connected, label) {
   if (connected) {
     if (DOM.connectionDot)   DOM.connectionDot.className     = 'status-dot connected';
     if (DOM.connectionLabel) DOM.connectionLabel.textContent = label || 'Connected';
+    DOM.quickConnectBtn?.classList.add('hidden');
+  } else if (app.isOfflinePreview) {
+    if (DOM.connectionDot)   DOM.connectionDot.className     = 'status-dot test-mode';
+    if (DOM.connectionLabel) DOM.connectionLabel.textContent = 'Preview (Offline)';
+    DOM.quickConnectBtn?.classList.remove('hidden');
+    if (DOM.latencyDisplay)  DOM.latencyDisplay.textContent  = '0 ms';
   } else {
     if (DOM.connectionDot)   DOM.connectionDot.className     = 'status-dot disconnected';
     if (DOM.connectionLabel) DOM.connectionLabel.textContent = 'Disconnected';
+    DOM.quickConnectBtn?.classList.add('hidden');
     if (DOM.latencyDisplay)  DOM.latencyDisplay.textContent  = '-- ms';
   }
 }
@@ -435,6 +664,9 @@ function switchLayout(layoutId, notify = true) {
     target.classList.add('active');
     localStorage.setItem('activeLayout', layoutId);
     if (DOM.layoutSelect) DOM.layoutSelect.value = layoutId;
+
+    // Apply custom positions and scales for this layout
+    window.hudCustomizer?.setActiveLayout(layoutId);
 
     // Release all keys when switching layouts so nothing gets stuck
     if (app.connected) {
@@ -491,11 +723,38 @@ function setupActionButtons() {
   btns.forEach(({ el, control }) => {
     if (!el) return;
 
+    let lastTapTime = 0;
+
     const onDown = (e) => {
+      // Don't fire control keystrokes if player is dragging HUD elements in Edit Mode
+      if (window.hudCustomizer?.isEditing) return;
+
       e.preventDefault();
-      const mapping = app.mappingManager.activeMapping;
+      const mapping = app.mappingManager?.activeMapping;
+      if (!mapping) return;
       const key  = mapping[control]?.key;
       const mode = mapping[control]?.mode || 'hold';
+
+      // Disengage cruise control if braking or reversing
+      if ((control === 'move_down' || control === 'brake') && app.cruiseControl) {
+        toggleCruiseControl(false);
+      }
+
+      const now = Date.now();
+      const isDoubleTap = (now - lastTapTime < 320);
+      lastTapTime = now;
+
+      // Check if button is already auto-locked
+      if (app.autoHoldControls.has(control)) {
+        toggleControlAutoLock(control, el);
+        return;
+      }
+
+      // Check if Auto-Hold master mode is active OR player double-tapped
+      if (mode === 'hold' && (app.autoHoldMode || isDoubleTap)) {
+        toggleControlAutoLock(control, el);
+        return;
+      }
 
       el.classList.add('pressed');
       vibrate([15]);
@@ -513,9 +772,15 @@ function setupActionButtons() {
     };
 
     const onUp = (e) => {
-      const mapping = app.mappingManager.activeMapping;
+      if (window.hudCustomizer?.isEditing) return;
+
+      const mapping = app.mappingManager?.activeMapping;
+      if (!mapping) return;
       const key  = mapping[control]?.key;
       const mode = mapping[control]?.mode || 'hold';
+
+      // If control is auto-locked, keep it locked on!
+      if (app.autoHoldControls.has(control)) return;
 
       el.classList.remove('pressed');
 
@@ -701,8 +966,10 @@ function init() {
     if (DOM.profileNameDisplay) DOM.profileNameDisplay.textContent = app.mappingManager.activeProfileName;
   });
 
-  // Connect buttons
+  // Connect & Preview buttons
   DOM.connectBtn?.addEventListener('click', connectWs);
+  DOM.previewBtn?.addEventListener('click', startOfflinePreview);
+  DOM.quickConnectBtn?.addEventListener('click', () => showScreen('connect-screen'));
   DOM.bleConnectBtn?.addEventListener('click', connectBle);
   DOM.serverIp?.addEventListener('keydown', e => { if (e.key === 'Enter') connectWs(); });
   DOM.serverPort?.addEventListener('keydown', e => { if (e.key === 'Enter') connectWs(); });
@@ -716,7 +983,7 @@ function init() {
   // Reset
   DOM.resetBtn?.addEventListener('click', () => {
     releaseAllKeys();
-    toast('🔄 Keys released');
+    toast('🔄 All keys released & auto-locks cleared');
     vibrate([30]);
   });
 
@@ -727,16 +994,25 @@ function init() {
     toast(app.hapticEnabled ? '📳 Haptics ON' : '🔇 Haptics OFF');
   });
 
+  // Pro Assists (Auto-Gas, Turbo Rapid Fire & Auto-Hold Lock)
+  DOM.cruiseBtn?.addEventListener('click', () => toggleCruiseControl());
+  DOM.turboBtn?.addEventListener('click', () => toggleTurboMode());
+  DOM.autolockBtn?.addEventListener('click', () => toggleAutoHoldMode());
+
   // Joystick
   app.joystick = new VirtualJoystick(DOM.joystickBase, DOM.joystickThumb, {
     deadZone: 0.15,
     updateInterval: 16,
     onMove: (x, y, dirs) => {
+      if (window.hudCustomizer?.isEditing) return;
+      if (dirs.has('down') && app.cruiseControl) {
+        toggleCruiseControl(false);
+      }
       app.joystickDirs = dirs;
-      // Immediately send on change
       sendCurrentState();
     },
     onRelease: () => {
+      if (window.hudCustomizer?.isEditing) return;
       app.joystickDirs = new Set();
       sendCurrentState();
     }
@@ -745,6 +1021,9 @@ function init() {
   // Action buttons & Layout Switcher
   setupLayoutSwitcher();
   setupActionButtons();
+
+  // HUD Customizer (Position Dragging & Scale Resizing)
+  window.hudCustomizer?.init();
 
   // Mapping screen
   setupMappingScreen();
