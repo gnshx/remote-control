@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-run.py — Unified Launcher for Phone Game Controller 🎮
-Serves the mobile web controller, generates a QR code for your phone,
-and runs the laptop input agent.
+run.py — Unified Launcher for Game Controller 🎮
+Supports Bidirectional Control:
+  1. Phone ➔ Laptop Mode (Use phone as game controller for laptop games)
+  2. Laptop ➔ Phone Mode (--reverse: Use laptop keyboard/mouse to play games on phone)
 
 Usage:
-  python3 run.py [--http-port 8000] [--ws-port 8765] [--dry-run]
+  python3 run.py [--http-port 8000] [--ws-port 8765] [--reverse-port 8766] [--reverse] [--dry-run]
 """
 
 import asyncio
@@ -17,17 +18,22 @@ import sys
 import threading
 import time
 
-# Ensure laptop-agent directory is in sys.path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 AGENT_DIR = os.path.join(BASE_DIR, "laptop-agent")
+REVERSE_AGENT_DIR = os.path.join(BASE_DIR, "reverse-agent")
 MOBILE_DIR = os.path.join(BASE_DIR, "mobile")
+REVERSE_DIR = os.path.join(BASE_DIR, "reverse")
+
 if AGENT_DIR not in sys.path:
     sys.path.insert(0, AGENT_DIR)
+if REVERSE_AGENT_DIR not in sys.path:
+    sys.path.insert(0, REVERSE_AGENT_DIR)
 
 from controller.mapping_engine import MappingEngine
 from input.dry_run_adapter import DryRunAdapter
 from safety.watchdog import Watchdog
 from transport.websocket_server import WebSocketServer
+from reverse_server import ReverseServer
 
 # Configure logging
 logging.basicConfig(
@@ -43,7 +49,6 @@ def get_local_ip() -> str:
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.settimeout(0.5)
-        # Doesn't actually connect, just determines outbound interface
         s.connect(("8.8.8.8", 80))
         ip = s.getsockname()[0]
         s.close()
@@ -73,13 +78,20 @@ def print_qr_code(url: str):
         log.debug("QR code generation note: %s", e)
 
 
-class MobileHTTPHandler(http.server.SimpleHTTPRequestHandler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=MOBILE_DIR, **kwargs)
+class DualHTTPHandler(http.server.SimpleHTTPRequestHandler):
+    """Serves mobile controller at / and reverse laptop controller at /reverse/."""
+
+    def translate_path(self, path):
+        clean_path = path.split("?", 1)[0].split("#", 1)[0]
+        if clean_path == "/reverse" or clean_path.startswith("/reverse/"):
+            rel_path = clean_path[len("/reverse") :].lstrip("/")
+            if not rel_path:
+                rel_path = "index.html"
+            return os.path.join(REVERSE_DIR, rel_path)
+        return os.path.join(MOBILE_DIR, clean_path.lstrip("/"))
 
     def log_message(self, format, *args):
-        # Quiet regular HTTP 200 GET requests
-        pass
+        pass  # Quiet regular HTTP 200 GET requests
 
 
 def find_available_port(host: str, start_port: int) -> int:
@@ -96,12 +108,12 @@ def find_available_port(host: str, start_port: int) -> int:
     return start_port
 
 
-class MobileHTTPServer(http.server.ThreadingHTTPServer):
+class DualHTTPServer(http.server.ThreadingHTTPServer):
     allow_reuse_address = True
 
 
 def start_http_server(host: str, port: int):
-    server = MobileHTTPServer((host, port), MobileHTTPHandler)
+    server = DualHTTPServer((host, port), DualHTTPHandler)
     t = threading.Thread(target=server.serve_forever, daemon=True)
     t.start()
     return server
@@ -122,52 +134,33 @@ def get_keyboard_adapter(session: str, dry_run: bool = False):
     if dry_run:
         return DryRunAdapter()
 
-    # On Wayland, uinput is the ONLY reliable way to inject input into native Wayland windows (Chrome)
     if session == "wayland":
         try:
             from input.uinput_adapter import UInputAdapter
             adapter = UInputAdapter()
             log.info("Loaded uinput kernel keyboard adapter (Wayland native)")
             return adapter
-        except Exception as e:
-            print("\n" + "=" * 64)
-            print("  ⚠️   WAYLAND DESKTOP DETECTED")
-            print("=" * 64)
-            print("  Wayland security blocks app-level synthetic keystrokes.")
-            print("  To enable game controls, grant virtual keyboard permission:")
-            print("\n      sudo chmod 666 /dev/uinput\n")
-            print("  Or run the controller with sudo:")
-            print("\n      sudo ./start.sh\n")
-            print("=" * 64 + "\n")
-            log.warning("uinput not accessible on Wayland: %s", e)
+        except Exception:
+            pass
 
-        # Fallback to pynput for Xwayland fallback
-        try:
-            from input.pynput_adapter import PynputAdapter
-            adapter = PynputAdapter()
-            log.info("Loaded pynput keyboard adapter (Xwayland fallback)")
-            return adapter
-        except Exception as e:
-            log.warning("pynput fallback unavailable: %s", e)
+    try:
+        from input.pynput_adapter import PynputAdapter
+        adapter = PynputAdapter()
+        log.info("Loaded pynput keyboard adapter")
+        return adapter
+    except Exception as e:
+        log.warning("pynput not available (%s), trying session adapter...", e)
 
-    # On X11, try pynput first, then XTest, then uinput
-    else:
-        try:
-            from input.pynput_adapter import PynputAdapter
-            adapter = PynputAdapter()
-            log.info("Loaded pynput keyboard adapter (X11)")
-            return adapter
-        except Exception as e:
-            log.warning("pynput not available (%s), trying session adapter...", e)
-
+    if session == "x11":
         try:
             from input.xtest_adapter import XTestAdapter
             adapter = XTestAdapter()
-            log.info("Loaded XTest X11 keyboard adapter")
+            log.info("Loaded XTest keyboard adapter (X11)")
             return adapter
         except Exception as e:
             log.warning("XTest not available: %s", e)
 
+    if session == "wayland":
         try:
             from input.uinput_adapter import UInputAdapter
             adapter = UInputAdapter()
@@ -183,11 +176,13 @@ def get_keyboard_adapter(session: str, dry_run: bool = False):
 async def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="Phone Game Controller Launcher")
+    parser = argparse.ArgumentParser(description="Bidirectional Phone & Laptop Game Controller")
     parser.add_argument("--host", default="0.0.0.0", help="Bind IP (default: 0.0.0.0)")
     parser.add_argument("--http-port", default=8000, type=int, help="HTTP web port (default: 8000)")
-    parser.add_argument("--ws-port", default=8765, type=int, help="WebSocket port (default: 8765)")
-    parser.add_argument("--dry-run", action="store_true", help="Log keys without keyboard injection")
+    parser.add_argument("--ws-port", default=8765, type=int, help="Phone-to-Laptop WebSocket port (default: 8765)")
+    parser.add_argument("--reverse-port", default=8766, type=int, help="Laptop-to-Phone Reverse port (default: 8766)")
+    parser.add_argument("--reverse", action="store_true", help="Start in Laptop-to-Phone Reverse mode")
+    parser.add_argument("--dry-run", action="store_true", help="Log keys without injection")
     args = parser.parse_args()
 
     local_ip = get_local_ip()
@@ -195,26 +190,24 @@ async def main():
 
     http_port = find_available_port(args.host, args.http_port)
     ws_port = find_available_port(args.host, args.ws_port)
-
-    if http_port != args.http_port:
-        log.info("HTTP port %d in use, using port %d", args.http_port, http_port)
-    if ws_port != args.ws_port:
-        log.info("WebSocket port %d in use, using port %d", args.ws_port, ws_port)
+    rev_ws_port = find_available_port(args.host, args.reverse_port)
 
     mobile_url = f"http://{local_ip}:{http_port}"
+    reverse_url = f"http://localhost:{http_port}/reverse/"
     ws_url = f"ws://{local_ip}:{ws_port}"
+    rev_ws_url = f"ws://{local_ip}:{rev_ws_port}"
 
-    # 1. Start HTTP server for mobile controller
+    # 1. Start HTTP server
     http_server = start_http_server(args.host, http_port)
 
-    # 2. Build keyboard adapter
+    # 2. Build keyboard adapter for Phone-to-Laptop mode
     kb_adapter = get_keyboard_adapter(session, dry_run=args.dry_run)
 
     # 3. Load mapping engine
     config_path = os.path.join(AGENT_DIR, "config", "profiles.json")
     mapping_engine = MappingEngine(config_path)
 
-    # 4. Start WebSocket server
+    # 4. Start Phone-to-Laptop WebSocket server
     ws_server = WebSocketServer(
         host=args.host,
         port=ws_port,
@@ -222,40 +215,56 @@ async def main():
         mapping_engine=mapping_engine,
     )
 
-    # Banner
-    print("=" * 64)
-    print("  🎮  PHONE-TO-LAPTOP WIRELESS GAME CONTROLLER  🎮")
-    print("=" * 64)
-    print(f"  • Phone Web URL   :  {mobile_url}")
-    print(f"  • WebSocket Agent :  {ws_url}")
-    print(f"  • Active Profile  :  {mapping_engine.active_profile_name}")
-    print(f"  • Desktop Session :  {session.upper()}")
-    print(f"  • Keyboard Adapter:  {type(kb_adapter).__name__}")
-    print("=" * 64)
+    # 5. Start Reverse Laptop-to-Phone WebSocket server
+    rev_server = ReverseServer(
+        host=args.host,
+        port=rev_ws_port,
+    )
 
-    # Print terminal QR code
-    print_qr_code(mobile_url)
+    # Print Banner
+    print("=" * 68)
+    if args.reverse:
+        print("  🎮  LAPTOP ➔ PHONE WIRELESS GAME CONTROLLER & KEYMAPPER  🎮")
+    else:
+        print("  🎮  BIDIRECTIONAL PHONE & LAPTOP WIRELESS GAME CONTROLLER  🎮")
+    print("=" * 68)
+    print(f"  • Phone-to-Laptop URL :  {mobile_url}")
+    print(f"  • Laptop-to-Phone URL :  {reverse_url}")
+    print(f"  • WebSocket Agent (P2L): {ws_url}")
+    print(f"  • WebSocket Agent (L2P): {rev_ws_url}")
+    print(f"  • Desktop Session     :  {session.upper()}")
+    print("=" * 68)
 
-    print(f"  📱 Open on your phone: {mobile_url}")
-    print(f"  🏎️  Open in Chrome   : https://smashkarts.io (or any game!)")
-    print("  🛑 Press Ctrl+C to stop.")
-    print("=" * 64)
+    if args.reverse:
+        print(f"\n  🚀 [REVERSE MODE ACTIVE] Play phone games using laptop keyboard & mouse!")
+        print(f"  💻 Open the Laptop Studio in Chrome: {reverse_url}")
+        print(f"  📱 Connect to your phone via Wireless ADB (Developer Options ➔ Wireless Debugging)")
+    else:
+        print_qr_code(mobile_url)
+        print(f"  📱 [Phone ➔ Laptop]: Scan QR code or open on phone: {mobile_url}")
+        print(f"  💻 [Laptop ➔ Phone]: Open reverse controller studio: {reverse_url}")
+
+    print("\n  🛑 Press Ctrl+C to stop.")
+    print("=" * 68)
     print()
 
     try:
-        await ws_server.start()
+        await asyncio.gather(
+            ws_server.start(),
+            rev_server.start(),
+        )
     except (asyncio.CancelledError, KeyboardInterrupt):
         pass
     finally:
         log.info("Stopping servers...")
         kb_adapter.release_all()
         await ws_server.stop()
+        await rev_server.stop()
         http_server.shutdown()
-        log.info("Shutdown complete. All keys released safely.")
+        log.info("Shutdown complete. All keys and connections released safely.")
 
 
 def cli():
-    """Console script entrypoint for pip / packaging."""
     try:
         asyncio.run(main())
     except KeyboardInterrupt:

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Phone Game Receiver 📱</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800;900&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #080b12;
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+    }
+    .receiver-card {
+      background: #111827;
+      border: 1px solid #00e5cc;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 440px;
+      box-shadow: 0 0 30px rgba(0, 229, 204, 0.2);
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(0, 229, 204, 0.15);
+      color: #00e5cc;
+      font-weight: 800;
+      font-size: 11px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      margin-bottom: 12px;
+    }
+    h1 { font-size: 22px; margin-bottom: 8px; }
+    p { font-size: 13px; color: #8892b0; line-height: 1.5; margin-bottom: 20px; }
+    .status-box {
+      background: #080b12;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #48bb78; box-shadow: 0 0 10px #48bb78; }
+    .pulse-tap {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border: 2px solid #00e5cc;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      animation: ripple 0.4s ease-out forwards;
+    }
+    @keyframes ripple {
+      from { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+      to   { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="receiver-card">
+    <span class="badge">RECEIVER ACTIVE</span>
+    <h1>📱 Phone Game Receiver</h1>
+    <p>This phone is connected to your laptop. Keystrokes, taps, and joystick movements from your laptop will be executed directly here!</p>
+
+    <div class="status-box">
+      <span>Laptop Link:</span>
+      <span id="link-status" style="color: #00e5cc;">CONNECTED</span>
+      <span class="dot"></span>
+    </div>
+
+    <div style="font-size: 11px; color: #8892b0;">
+      Keep this screen open or in split-screen/PiP with your game!
+    </div>
+  </div>
+
+  <div id="touch-layer" style="position: fixed; inset: 0; pointer-events: none;"></div>
+
+  <script>
+    const host = window.location.hostname || '127.0.0.1';
+    const ws = new WebSocket(`ws://${host}:8766`);
+
+    ws.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        if (msg.type === 'TAP') {
+          showVisualRipple(msg.x, msg.y);
+          if (navigator.vibrate) navigator.vibrate(10);
+        }
+      } catch (_) {}
+    };
+
+    function showVisualRipple(x, y) {
+      const el = document.createElement('div');
+      el.className = 'pulse-tap';
+      el.style.left = (x % window.innerWidth) + 'px';
+      el.style.top = (y % window.innerHeight) + 'px';
+      document.getElementById('touch-layer').appendChild(el);
+      setTimeout(() => el.remove(), 400);
+    }
+  </script>
+</body>
+</html>

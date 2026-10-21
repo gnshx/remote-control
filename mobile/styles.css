@@ -1550,6 +1550,49 @@ html, body {
   .btn-fire   { width: 72px; height: 72px; }
 }
 
+/* ── Mode Switcher ── */
+.mode-switch-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 18px 0 10px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.mode-switch-divider::before,
+.mode-switch-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--border);
+}
+.mode-switch-divider span {
+  padding: 0 10px;
+}
+.btn-mode-toggle {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(59, 130, 246, 0.15));
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  color: #c084fc;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.1);
+}
+.btn-mode-toggle:hover {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(59, 130, 246, 0.25));
+  border-color: #a855f7;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.25);
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }

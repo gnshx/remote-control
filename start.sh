@@ -43,5 +43,13 @@ fi
 
 PYTHON_BIN=".venv/bin/python"
 
-echo "Starting Phone-to-Laptop Game Controller..."
+if [[ " $* " =~ " --reverse " ]]; then
+    echo "=========================================================="
+    echo "  📱  LAPTOP-TO-PHONE REVERSE CONTROLLER MODE ACTIVE     "
+    echo "=========================================================="
+    echo "Starting Laptop-to-Phone Reverse Controller..."
+else
+    echo "Starting Phone-to-Laptop Game Controller..."
+fi
+
 "$PYTHON_BIN" run.py "$@"

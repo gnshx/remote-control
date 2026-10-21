@@ -26,6 +26,7 @@
   - [5. Customizing Key Mappings](#5-customizing-key-mappings)
   - [6. 📐 HUD Customizer: Drag Positions & Edit Control Sizes](#6--hud-customizer-drag-positions--edit-control-sizes)
   - [7. ⚡ Pro Assists: Auto-Gas, Turbo Rapid-Fire & Auto-Hold](#7--pro-assists-auto-gas-turbo-rapid-fire--auto-hold)
+- [🔄 Reverse Mode: Play Phone Games with Laptop (Keyboard & Mouse)](#-reverse-mode-play-phone-games-with-laptop-keyboard--mouse)
 - [🎮 Controller Layouts & Supported Game Types](#-controller-layouts--supported-game-types)
 - [🏗️ How We Built It & Technology Stack](#️-how-we-built-it--technology-stack)
   - [System Architecture Diagram](#system-architecture-diagram)
@@ -42,8 +43,12 @@
 ## 🌟 Features
 
 - **📱 Zero Phone App Installation**: Operates entirely within mobile Chrome through modern Web APIs. No APKs, rooting, or sideloading required.
+- **🔄 Bidirectional Dual-Mode**:
+  - **Phone ➔ Laptop**: Use your smartphone as a wireless gamepad for PC/browser games.
+  - **Laptop ➔ Phone (Reverse)**: Play native Android mobile games using your laptop keyboard (WASD movement) and mouse (first-person camera aim) via Wireless ADB or Web Companion!
 - **⚡ Ultra-Low Latency (< 5ms)**: Streamlined local WebSocket communication pipeline bypassing cloud relays, with direct binary-compatible payload serialization.
 - **🕹️ Analog-Style Virtual Joystick**: Precision-engineered thumbstick powered by the PointerEvents API with circular dead-zone filtering and directional arrows.
+- **🎯 Visual Keymapper Studio**: Drag virtual touch pins onto an interactive phone canvas, map any laptop key or mouse button, and save game-specific profiles.
 - **🔄 State Reconciliation Engine**: The laptop tracks authoritative key states, executing set-difference math (`to_press = desired - current`, `to_release = current - desired`) to eliminate ghost inputs and missed key-releases.
 - **⚙️ Live Key Mapping Editor**: Customize any button or direction on-the-fly from the phone interface with persistent `localStorage` and JSON export.
 - **🔀 Hold vs. Tap Modes**: Continuous steering and throttle use *Hold* mode; weapons, items, and abilities use microsecond-timed *Tap* mode.
@@ -211,6 +216,84 @@ Eliminate thumb fatigue during long gaming sessions:
   - Turn ON `🔒 Auto-Hold` from the bottom bar: any button you tap locks ON immediately!
   - **Double-Tap Lock**: Double-tap any button (like Drift, Gas, or Special) anytime to lock it down. A glowing neon lock icon `🔒` appears over the button. Tap again to release!
 - **🔄 Reset**: Tap `🔄 Reset` at any time to instantly release all held keys and clear all active auto-locks.
+
+---
+
+## 🔄 Reverse Mode: Play Phone Games with Laptop (Keyboard & Mouse)
+
+Want to play mobile games (PUBG Mobile, Call of Duty Mobile, Genshin Impact, Minecraft Bedrock, Asphalt 9, or mobile HTML5 games) on your phone while controlling them with your laptop's **full mechanical keyboard and precision mouse**?
+
+The **Reverse Controller Studio** transforms your laptop into a high-performance mobile gaming control rig without needing heavy Android emulators like Bluestacks!
+
+### How Reverse Mode Works
+
+```
+┌────────────────────────────────────────────────────────┐
+│             LAPTOP REVERSE STUDIO                      │
+│  (http://localhost:8000/reverse/ on Chrome / Firefox)  │
+│                                                        │
+│  • Keyboard (WASD, Space, Shift, 1-6)                  │
+│  • Mouse Aim & Left/Right Click                        │
+│  • Pointer Lock (True First-Person Camera Look)        │
+│  • Visual Drag-and-Drop On-Screen Keymapper            │
+└──────────────────────────┬─────────────────────────────┘
+                           │ WebSocket (ws://localhost:8766)
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│               PYTHON REVERSE AGENT                     │
+│  (reverse-agent/reverse_server.py + adb_bridge.py)     │
+│                                                        │
+│  • Screen coordinate normalizer (0-100% ➔ WxH px)     │
+│  • Multi-finger touch state tracker                    │
+│  • ADB Shell Input Bridge (Zero-Root required)        │
+└──────────┬─────────────────────────────┬───────────────┘
+           │ Wireless ADB (Port 5555)    │ Local Wi-Fi WebSocket
+           ▼                             ▼
+┌───────────────────────┐   ┌─────────────────────────────┐
+│  NATIVE ANDROID APPS  │   │     PHONE WEB RECEIVER      │
+│  (Any Game from Play  │   │  (/reverse/phone-receiver)  │
+│   Store, COD, PUBG)   │   │  HTML5 & WebGL Games        │
+└───────────────────────┘   └─────────────────────────────┘
+```
+
+### 1. Launch Reverse Mode
+
+Run with the `--reverse` flag:
+
+```bash
+./start.sh --reverse
+```
+*(Or navigate to `http://localhost:8000/reverse/` from the standard server).*
+
+The studio interface opens on your laptop displaying:
+- A live visual mockup of your phone screen in landscape orientation.
+- Interactive draggable touch pins (`WASD` virtual joystick, `FIRE`, `JUMP`, `RELOAD`, `AIM`).
+- Live keyboard and mouse HUD tracker.
+- Built-in game presets (Shooter, Racing, Minecraft, Runner, Platformer).
+
+### 2. Connect Your Phone via Wireless ADB (Zero Root)
+
+To inject touches directly into any native Android game:
+
+1. On your phone: Go to **Settings** ➔ **Developer Options** ➔ Enable **Wireless Debugging** (or connect via USB cable).
+2. Note your phone's IP and port (e.g. `192.168.1.50:5555`).
+3. In the Laptop Studio top bar, click **⚡ Connect Phone ADB**.
+4. Enter the phone's IP and click **Connect**.
+5. *Done!* Every key press and mouse movement on your laptop instantly simulates multi-touch gestures on your phone screen!
+
+> **💡 Web Game Receiver Alternative**: Playing browser/HTML5 games on your phone? Open `http://<laptop-ip>:8000/reverse/phone-receiver.html` in Chrome on your phone to receive touch taps directly in the browser!
+
+### 3. Features & Presets
+
+- **🎯 Drag-and-Drop Touch Pins**: Drag buttons directly over your game's on-screen controls to align coordinates perfectly.
+- **🖱️ Mouse Aim with Pointer Lock**: Click **🖱️ Lock Mouse Aim** (or press `F2`) to capture your mouse cursor for true FPS/TPS mouse looking!
+- **⚡ Built-in Presets**:
+  - **Shooter (FPS / Battle Royale)**: WASD Move, Left Click Shoot, Right Click Aim, Space Jump, C Crouch, R Reload, 1-3 Weapons.
+  - **Racing / Driving**: W Gas, S Brake, A/D Steering, Space Handbrake, N Nitro.
+  - **Minecraft Mobile**: WASD Movement, Space Jump, Shift Sneak, Left Click Mine/Attack, Right Click Place.
+  - **Endless Runner**: WASD Swipes (Up/Down/Left/Right).
+  - **Retro Platformer**: D-Pad + Jump/Attack action buttons.
+- **💾 Profile Storage**: Export and import your custom key layouts as JSON files.
 
 ---
 
@@ -439,15 +522,21 @@ echo $XDG_SESSION_TYPE
 │   ├── workflows/              # GitHub Actions CI/CD workflows (Tests, PyPI build)
 │   ├── ISSUE_TEMPLATE/         # Bug, layout request, and feature templates
 │   └── pull_request_template.md# Pull request checklist
-├── mobile/                     # Mobile Web Controller (Runs in Chrome on Android)
-│   ├── index.html              # Multi-layout controller views (Racing, D-Pad, etc.)
+├── mobile/                     # Mobile Web Controller (Runs in Chrome on Android: Phone ➔ Laptop)
+│   ├── index.html              # Multi-layout controller views (Smash Karts, Racing, D-Pad, etc.)
 │   ├── styles.css              # Dark neo-cyberpunk gaming UI design system
 │   ├── joystick.js             # Low-latency PointerEvents virtual thumbstick
 │   ├── key-mapping.js          # Profile manager & key mapping with localStorage
 │   ├── bluetooth.js            # Web Bluetooth API client for BLE connections
 │   └── controller.js           # Multi-transport orchestrator & key state sync
 │
-├── laptop-agent/               # Ubuntu Laptop Agent (Python 3)
+├── reverse/                    # Reverse Controller Studio (Laptop ➔ Phone)
+│   ├── index.html              # Drag-and-drop touch keymapper & visual phone simulator
+│   ├── styles.css              # Dark gaming studio interface & HUD styling
+│   ├── laptop-controller.js    # Keyboard/mouse listener, pointer lock & coordinate scaler
+│   └── phone-receiver.html     # Companion HTML5 receiver for mobile web games
+│
+├── laptop-agent/               # Phone ➔ Laptop Agent (Python 3)
 │   ├── main.py                 # Standalone agent runner
 │   ├── transport/              # Network transport servers (WebSocket + BLE)
 │   ├── controller/             # Key mapping engine & profile manager
@@ -455,10 +544,14 @@ echo $XDG_SESSION_TYPE
 │   ├── safety/                 # Watchdog & release failsafes
 │   └── config/                 # Default profiles configuration
 │
+├── reverse-agent/              # Laptop ➔ Phone Agent (Python 3)
+│   ├── adb_bridge.py           # Zero-root ADB shell touch/swipe/key injection engine
+│   └── reverse_server.py       # High-performance async WebSocket bridge (port 8766)
+│
 ├── pyproject.toml              # Modern PEP 621 Python packaging (pip install)
 ├── install.sh                  # Automated Linux installer with udev rule setup
 ├── start.sh                    # One-command startup script
-├── run.py                      # Unified launcher & CLI entrypoint
+├── run.py                      # Unified dual-mode launcher & CLI entrypoint
 ├── CONTRIBUTING.md             # Community contribution guide
 ├── CODE_OF_CONDUCT.md          # Contributor Covenant 2.1
 ├── SECURITY.md                 # Local network security policy

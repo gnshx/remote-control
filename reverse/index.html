@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Laptop-to-Phone Game Controller & Keymapper 🎮</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+      <div class="nav-left">
+        <div class="brand">
+          <span class="brand-icon">💻➔📱</span>
+          <div class="brand-text">
+            <h1>Laptop ➔ Phone Controller</h1>
+            <span class="sub-badge">Reverse Gamepad & Touch Keymapper</span>
+          </div>
+        </div>
+        <a href="/" class="mode-switch-btn" title="Switch back to Phone-to-Laptop mode">
+          ⇄ Switch to Phone ➔ Laptop
+        </a>
+      </div>
+
+      <div class="nav-center">
+        <!-- Preset Selector -->
+        <div class="preset-selector-wrap">
+          <label for="profile-select">Game Preset:</label>
+          <select id="profile-select" class="custom-select">
+            <option value="racing">🏎️ Mobile Racing (Asphalt / CarX / Real Racing)</option>
+            <option value="shooter" selected>🔫 Battle Royale / Shooter (BGMI / COD / Free Fire)</option>
+            <option value="minecraft">⛏️ Minecraft PE (Walk + Mine + Jump)</option>
+            <option value="runner">🛹 Endless Runner (Subway Surfers)</option>
+            <option value="platformer">🧭 Retro 2D Platformer (D-Pad + ABXY)</option>
+            <option value="custom">⚙️ Custom Profile</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="nav-right">
+        <div class="device-status">
+          <span id="connection-dot" class="status-dot disconnected"></span>
+          <span id="connection-label" class="status-text">Disconnected</span>
+          <span id="latency-badge" class="latency-badge">-- ms</span>
+        </div>
+        <button id="open-connect-modal-btn" class="btn-primary-glow">
+          ⚡ Connect Phone
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Studio Body -->
+    <main class="studio-body">
+      <!-- Left Panel: Phone Screen Visual Keymapper -->
+      <section class="canvas-panel">
+        <div class="canvas-header">
+          <div class="canvas-title">
+            <h2>📱 Phone Screen Touch Target Mapper</h2>
+            <span class="canvas-hint">Drag any key pin to match your mobile game buttons</span>
+          </div>
+          <div class="canvas-toolbar">
+            <button id="add-pin-btn" class="toolbar-btn">➕ Add Key Pin</button>
+            <button id="reset-pins-btn" class="toolbar-btn">↺ Reset Layout</button>
+            <button id="mouse-lock-btn" class="toolbar-btn btn-highlight" title="Use laptop mouse for smooth in-game camera look">
+              🎯 Lock Mouse (FPS Aim)
+            </button>
+          </div>
+        </div>
+
+        <!-- Phone Mockup Container -->
+        <div class="phone-canvas-outer">
+          <div class="phone-frame" id="phone-frame">
+            <div class="phone-speaker"></div>
+            <div class="phone-screen" id="phone-screen">
+              <!-- Grid overlay for accurate alignment -->
+              <div class="screen-grid"></div>
+
+              <!-- Interactive Mapped Key Pins injected here -->
+              <div id="pins-layer" class="pins-layer"></div>
+
+              <!-- Mouse Aiming Crosshair (Active in Pointer Lock mode) -->
+              <div id="aim-crosshair" class="aim-crosshair hidden">
+                <div class="crosshair-dot"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Touch Pin Quick Edit Bar (Appears when pin selected) -->
+        <div id="pin-inspector" class="pin-inspector hidden">
+          <span class="inspector-badge" id="inspector-name">Key: SPACE</span>
+          <div class="inspector-field">
+            <label>Key: <input type="text" id="inspector-key-input" maxlength="10" /></label>
+          </div>
+          <div class="inspector-field">
+            <label>Size: <input type="range" id="inspector-size-slider" min="36" max="100" value="56" /></label>
+          </div>
+          <div class="inspector-coords" id="inspector-coords">X: 1820px (75%) • Y: 840px (77%)</div>
+          <button id="inspector-delete-btn" class="btn-delete">🗑️ Delete</button>
+        </div>
+      </section>
+
+      <!-- Right Panel: Keyboard & Mouse HUD & Settings -->
+      <aside class="sidebar-panel">
+        <!-- Live Keyboard Visualizer -->
+        <div class="sidebar-card">
+          <div class="card-header">
+            <h3>⌨️ Live Laptop Inputs</h3>
+            <span class="badge-live">LIVE 60Hz</span>
+          </div>
+          <p class="card-desc">Press any key on your laptop keyboard or click mouse:</p>
+
+          <div class="keyboard-hud">
+            <div class="kb-row">
+              <span class="kb-key" id="kb-w">W</span>
+            </div>
+            <div class="kb-row">
+              <span class="kb-key" id="kb-a">A</span>
+              <span class="kb-key" id="kb-s">S</span>
+              <span class="kb-key" id="kb-d">D</span>
+            </div>
+            <div class="kb-row">
+              <span class="kb-key kb-wide" id="kb-shift">SHIFT</span>
+              <span class="kb-key kb-space" id="kb-space">SPACEBAR</span>
+              <span class="kb-key" id="kb-c">C</span>
+              <span class="kb-key" id="kb-e">E</span>
+              <span class="kb-key" id="kb-r">R</span>
+            </div>
+            <div class="kb-row mouse-row">
+              <span class="kb-key kb-mouse" id="kb-mouse-l">🖱️ L-CLICK (Fire)</span>
+              <span class="kb-key kb-mouse" id="kb-mouse-r">🖱️ R-CLICK (Aim)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phone Resolution & Calibration -->
+        <div class="sidebar-card">
+          <div class="card-header">
+            <h3>⚙️ Phone Display & Calibration</h3>
+          </div>
+          <div class="setting-row">
+            <label for="resolution-select">Target Resolution:</label>
+            <select id="resolution-select" class="custom-select">
+              <option value="2400x1080" selected>2400 × 1080 (FHD+ Standard)</option>
+              <option value="1600x720">1600 × 720 (HD+ Budget/Standard)</option>
+              <option value="2560x1440">2560 × 1440 (2K Flagship)</option>
+              <option value="3200x1440">3200 × 1440 (Ultra Wide / Fold)</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <label for="joystick-radius">Analog Stick Radius:</label>
+            <input type="range" id="joystick-radius" min="80" max="220" value="140" />
+            <span id="joystick-radius-val" class="setting-val">140px</span>
+          </div>
+          <div class="setting-row">
+            <label for="touch-duration">Tap Press Time:</label>
+            <input type="range" id="touch-duration" min="30" max="150" value="60" />
+            <span id="touch-duration-val" class="setting-val">60ms</span>
+          </div>
+        </div>
+
+        <!-- Pro Assists -->
+        <div class="sidebar-card">
+          <div class="card-header">
+            <h3>⚡ Pro Gaming Assists</h3>
+          </div>
+          <div class="assist-grid">
+            <button id="assist-autogas-btn" class="assist-toggle">
+              <span class="assist-icon">🚀</span>
+              <div class="assist-meta">
+                <strong>Auto-Forward</strong>
+                <span>Continuous run/gas</span>
+              </div>
+            </button>
+            <button id="assist-turbo-btn" class="assist-toggle">
+              <span class="assist-icon">⚡</span>
+              <div class="assist-meta">
+                <strong>Rapid Fire</strong>
+                <span>15 Hz pulse tap</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Connect Phone Modal (Wireless ADB & Web Receiver) -->
+    <div id="connect-modal" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>⚡ Connect to Android Phone</h3>
+          <button id="close-connect-modal-btn" class="modal-close">&times;</button>
+        </div>
+
+        <div class="modal-tabs">
+          <button id="tab-wireless-adb" class="modal-tab active">📶 Wireless ADB (Recommended)</button>
+          <button id="tab-usb-adb" class="modal-tab">🔌 USB Cable</button>
+          <button id="tab-web-receiver" class="modal-tab">🌐 Web Receiver</button>
+        </div>
+
+        <!-- Wireless ADB Form -->
+        <div id="form-wireless-adb" class="modal-tab-content">
+          <div class="setup-steps">
+            <p><strong>1. On your phone:</strong> Enable <em>Developer Options ➔ Wireless Debugging</em> (or Network ADB).</p>
+            <p><strong>2. Note the IP & Port:</strong> Make sure phone & laptop are on the same Wi-Fi.</p>
+          </div>
+          <div class="input-group">
+            <label for="phone-ip">Phone IP Address:</label>
+            <input type="text" id="phone-ip" placeholder="e.g. 192.168.1.15" />
+          </div>
+          <div class="input-group">
+            <label for="phone-port">Port:</label>
+            <input type="number" id="phone-port" value="5555" />
+          </div>
+          <button id="adb-connect-btn" class="btn-primary-modal">
+            Connect Wirelessly
+          </button>
+          <div id="adb-status-msg" class="modal-status-msg hidden"></div>
+        </div>
+
+        <!-- USB ADB Form -->
+        <div id="form-usb-adb" class="modal-tab-content hidden">
+          <div class="setup-steps">
+            <p><strong>1. Plug phone into laptop</strong> with a USB cable.</p>
+            <p><strong>2. Enable "USB Debugging"</strong> on your phone and tap "Always Allow".</p>
+          </div>
+          <button id="detect-usb-btn" class="btn-secondary-modal">
+            🔍 Auto-Detect Connected Devices
+          </button>
+          <div id="usb-devices-list" class="devices-list"></div>
+        </div>
+
+        <!-- Web Receiver Form -->
+        <div id="form-web-receiver" class="modal-tab-content hidden">
+          <div class="setup-steps">
+            <p>Playing a mobile web game or HTML5 game? Open this URL on your phone's browser:</p>
+            <div class="receiver-url-box" id="receiver-url-display">http://.../phone-receiver.html</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+  </div>
+
+  <script src="laptop-controller.js"></script>
+</body>
+</html>
