@@ -122,34 +122,59 @@ def get_keyboard_adapter(session: str, dry_run: bool = False):
     if dry_run:
         return DryRunAdapter()
 
-    # Try pynput first (universal)
-    try:
-        from input.pynput_adapter import PynputAdapter
+    # On Wayland, uinput is the ONLY reliable way to inject input into native Wayland windows (Chrome)
+    if session == "wayland":
+        try:
+            from input.uinput_adapter import UInputAdapter
+            adapter = UInputAdapter()
+            log.info("Loaded uinput kernel keyboard adapter (Wayland native)")
+            return adapter
+        except Exception as e:
+            print("\n" + "=" * 64)
+            print("  ⚠️   WAYLAND DESKTOP DETECTED")
+            print("=" * 64)
+            print("  Wayland security blocks app-level synthetic keystrokes.")
+            print("  To enable game controls, grant virtual keyboard permission:")
+            print("\n      sudo chmod 666 /dev/uinput\n")
+            print("  Or run the controller with sudo:")
+            print("\n      sudo ./start.sh\n")
+            print("=" * 64 + "\n")
+            log.warning("uinput not accessible on Wayland: %s", e)
 
-        adapter = PynputAdapter()
-        log.info("Loaded pynput keyboard adapter")
-        return adapter
-    except Exception as e:
-        log.warning("pynput not available (%s), trying session adapter...", e)
+        # Fallback to pynput for Xwayland fallback
+        try:
+            from input.pynput_adapter import PynputAdapter
+            adapter = PynputAdapter()
+            log.info("Loaded pynput keyboard adapter (Xwayland fallback)")
+            return adapter
+        except Exception as e:
+            log.warning("pynput fallback unavailable: %s", e)
 
-    if session == "x11":
+    # On X11, try pynput first, then XTest, then uinput
+    else:
+        try:
+            from input.pynput_adapter import PynputAdapter
+            adapter = PynputAdapter()
+            log.info("Loaded pynput keyboard adapter (X11)")
+            return adapter
+        except Exception as e:
+            log.warning("pynput not available (%s), trying session adapter...", e)
+
         try:
             from input.xtest_adapter import XTestAdapter
-
             adapter = XTestAdapter()
             log.info("Loaded XTest X11 keyboard adapter")
             return adapter
         except Exception as e:
             log.warning("XTest not available: %s", e)
 
-    try:
-        from input.uinput_adapter import UInputAdapter
-
-        adapter = UInputAdapter()
-        log.info("Loaded uinput keyboard adapter")
-        return adapter
-    except Exception as e:
-        log.warning("uinput not available: %s", e)
+        try:
+            from input.uinput_adapter import UInputAdapter
+            adapter = UInputAdapter()
+            log.info("Loaded uinput keyboard adapter")
+            return adapter
+        except Exception as e:
+            log.warning("uinput not available: %s", e)
 
     log.warning("No keyboard injection backend active — running in DRY RUN mode")
     return DryRunAdapter()
