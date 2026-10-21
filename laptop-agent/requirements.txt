@@ -1,0 +1,5 @@
+websockets>=12.0
+pynput>=1.7.6
+evdev>=1.7.0
+python-xlib>=0.33
+qrcode>=7.4.2

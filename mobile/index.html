@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0d0f1a" />
+  <title>GamePad Remote Controller</title>
+  <meta name="description" content="Turn your Android phone into a wireless game controller for your laptop." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Connection Screen -->
+  <div id="connect-screen" class="screen active">
+    <div class="connect-card">
+      <div class="logo">
+        <div class="logo-icon">🎮</div>
+        <h1>GamePad</h1>
+        <p class="subtitle">Phone → Laptop Controller</p>
+      </div>
+
+      <!-- Transport Mode Toggle -->
+      <div class="transport-selector">
+        <button type="button" id="tab-ws" class="transport-btn active">📡 Wi-Fi (WebSocket)</button>
+        <button type="button" id="tab-ble" class="transport-btn">ᛒ Bluetooth LE</button>
+      </div>
+
+      <!-- WebSocket Form -->
+      <div id="ws-form" class="connect-form">
+        <div class="input-group">
+          <label for="server-ip">Laptop IP Address</label>
+          <input type="text" id="server-ip" placeholder="e.g. 192.168.1.10" autocomplete="off" />
+        </div>
+        <div class="input-group">
+          <label for="server-port">Port</label>
+          <input type="number" id="server-port" value="8765" min="1024" max="65535" />
+        </div>
+        <button id="connect-btn" class="btn-primary">
+          <span class="btn-text">Connect (Wi-Fi)</span>
+          <span class="btn-loader hidden">⟳</span>
+        </button>
+        <div id="connect-error" class="error-msg hidden"></div>
+      </div>
+
+      <!-- Bluetooth Form -->
+      <div id="ble-form" class="connect-form hidden">
+        <p class="ble-hint">Pairs wirelessly via Web Bluetooth. Requires Chrome on Android with Bluetooth enabled.</p>
+        <button id="ble-connect-btn" class="btn-primary btn-ble">
+          <span class="btn-text">ᛒ Pair Bluetooth Controller</span>
+          <span class="btn-loader hidden">⟳</span>
+        </button>
+        <div id="ble-error" class="error-msg hidden"></div>
+      </div>
+
+      <div class="profile-selector-mini">
+        <label>Active Profile</label>
+        <select id="active-profile-mini">
+          <option value="smash_karts">🏎️ Smash Karts</option>
+          <option value="wasd">⌨️ WASD Generic</option>
+          <option value="arrows">⬆️ Arrow Keys</option>
+          <option value="custom">⚙️ Custom</option>
+        </select>
+      </div>
+
+      <button id="open-mapping-btn" class="btn-secondary">
+        ⚙️ Edit Key Mappings
+      </button>
+    </div>
+  </div>
+
+  <!-- Controller Screen -->
+  <div id="controller-screen" class="screen">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div class="status-left">
+        <div id="connection-dot" class="status-dot disconnected"></div>
+        <span id="connection-label">Disconnected</span>
+      </div>
+      <div class="status-center">
+        <span id="profile-name-display">Smash Karts</span>
+      </div>
+      <div class="status-right">
+        <span id="latency-display" class="latency">-- ms</span>
+        <button id="disconnect-btn" class="icon-btn" title="Disconnect">⏏</button>
+        <button id="settings-btn" class="icon-btn" title="Settings">⚙</button>
+      </div>
+    </div>
+
+    <!-- Active Keys Display -->
+    <div class="keys-hud">
+      <div class="key-pill" id="hud-w">W</div>
+      <div class="key-pill" id="hud-a">A</div>
+      <div class="key-pill" id="hud-s">S</div>
+      <div class="key-pill" id="hud-d">D</div>
+      <div class="key-pill" id="hud-space">SPC</div>
+      <div class="key-pill" id="hud-e">E</div>
+    </div>
+
+    <!-- Main Controller Area -->
+    <div class="controller-area">
+      <!-- Left: Joystick -->
+      <div class="joystick-zone">
+        <div id="joystick-base" class="joystick-base">
+          <div class="joystick-ring"></div>
+          <div id="joystick-thumb" class="joystick-thumb">
+            <div class="joystick-inner"></div>
+          </div>
+          <div class="joystick-arrows">
+            <span class="arr arr-top">▲</span>
+            <span class="arr arr-right">▶</span>
+            <span class="arr arr-bottom">▼</span>
+            <span class="arr arr-left">◀</span>
+          </div>
+        </div>
+        <div class="joystick-label">MOVE</div>
+      </div>
+
+      <!-- Right: Action Buttons -->
+      <div class="buttons-zone">
+        <div class="buttons-grid">
+          <!-- Top button -->
+          <div class="btn-row center-row">
+            <div class="action-btn-wrap" style="grid-area: top;">
+              <button id="btn-e" class="action-btn btn-yellow" data-action="special">
+                <span class="btn-icon">⚡</span>
+                <span class="btn-label" id="btn-e-label">E</span>
+              </button>
+            </div>
+          </div>
+          <!-- Middle row -->
+          <div class="btn-row middle-row">
+            <div class="action-btn-wrap">
+              <button id="btn-q" class="action-btn btn-blue" data-action="item">
+                <span class="btn-icon">🎯</span>
+                <span class="btn-label" id="btn-q-label">Q</span>
+              </button>
+            </div>
+            <div class="action-btn-wrap fire-wrap">
+              <button id="btn-fire" class="action-btn btn-fire" data-action="fire">
+                <span class="btn-icon">💥</span>
+                <span class="btn-label" id="btn-fire-label">FIRE</span>
+              </button>
+            </div>
+          </div>
+          <!-- Bottom row -->
+          <div class="btn-row bottom-row">
+            <div class="action-btn-wrap">
+              <button id="btn-shift" class="action-btn btn-purple" data-action="brake">
+                <span class="btn-icon">🛑</span>
+                <span class="btn-label" id="btn-shift-label">BRAKE</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Controls -->
+    <div class="bottom-controls">
+      <button id="reset-btn" class="util-btn">🔄 Reset</button>
+      <div class="seq-counter">SEQ: <span id="seq-num">0</span></div>
+      <button id="vibrate-btn" class="util-btn">📳 Haptics</button>
+    </div>
+  </div>
+
+  <!-- Key Mapping Screen -->
+  <div id="mapping-screen" class="screen">
+    <div class="mapping-container">
+      <div class="mapping-header">
+        <button id="mapping-back-btn" class="back-btn">← Back</button>
+        <h2>Key Mappings</h2>
+        <button id="save-mapping-btn" class="btn-save">Save</button>
+      </div>
+
+      <div class="profile-tabs">
+        <button class="tab-btn active" data-profile="smash_karts">🏎️ Smash Karts</button>
+        <button class="tab-btn" data-profile="wasd">⌨️ WASD</button>
+        <button class="tab-btn" data-profile="arrows">⬆️ Arrows</button>
+        <button class="tab-btn" data-profile="custom">⚙️ Custom</button>
+      </div>
+
+      <div class="mapping-table-container">
+        <table class="mapping-table">
+          <thead>
+            <tr>
+              <th>Control</th>
+              <th>Icon</th>
+              <th>Key</th>
+              <th>Mode</th>
+            </tr>
+          </thead>
+          <tbody id="mapping-tbody">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mapping-actions">
+        <button id="reset-defaults-btn" class="btn-ghost">↺ Reset Defaults</button>
+        <button id="test-mapping-btn" class="btn-ghost">🧪 Test</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notifications -->
+  <div id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="bluetooth.js"></script>
+  <script src="key-mapping.js"></script>
+  <script src="joystick.js"></script>
+  <script src="controller.js"></script>
+</body>
+</html>
