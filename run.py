@@ -67,8 +67,10 @@ def print_qr_code(url: str):
         qr.make(fit=True)
         print("\n  Scan with your phone camera to open the controller:\n")
         qr.print_ascii(invert=True)
+    except ImportError:
+        print("\n  [Tip] Run `./start.sh` to auto-install 'qrcode' for terminal camera scanning!")
     except Exception as e:
-        log.debug("QR code generation skipped: %s", e)
+        log.debug("QR code generation note: %s", e)
 
 
 class MobileHTTPHandler(http.server.SimpleHTTPRequestHandler):
