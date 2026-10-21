@@ -1,0 +1,45 @@
+name: 🎮 New Game Layout / Profile Request
+description: Propose a new game preset or custom controller skin
+labels: ["game-profile", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Suggest a new game for built-in controller support!
+
+  - type: input
+    id: game_title
+    attributes:
+      label: Game Title & URL
+      description: e.g. Smash Karts (https://smashkarts.io), Krunker.io, TrackMania
+      placeholder: TrackMania Nations Forever
+    validations:
+      required: true
+
+  - type: dropdown
+    id: layout_type
+    attributes:
+      label: Desired Controller Layout Type
+      options:
+        - Racing Cockpit (Pedals + Steer)
+        - Virtual Analog Joystick + Action Cluster
+        - Retro 4-Way D-Pad + ABXY
+        - Simple Steer & Pedals
+        - Custom / Novel Layout
+    validations:
+      required: true
+
+  - type: textarea
+    id: key_bindings
+    attributes:
+      label: Required Key Bindings
+      description: What keys does the game use?
+      value: |
+        - Accelerate / Drive: W
+        - Brake / Reverse: S
+        - Steer Left: A
+        - Steer Right: D
+        - Action 1: Space
+        - Action 2: Shift
+    validations:
+      required: true

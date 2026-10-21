@@ -1,5 +1,8 @@
 # 🎮 Phone-to-Laptop Wireless Game Controller
 
+[![CI](https://github.com/gnshx/remote-control/actions/workflows/ci.yml/badge.svg)](https://github.com/gnshx/remote-control/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![Linux](https://img.shields.io/badge/Platform-Ubuntu%20%7C%20Linux%20(X11%20%26%20Wayland)-E95420.svg?logo=ubuntu&logoColor=white)](https://ubuntu.com/)
 [![Android Chrome](https://img.shields.io/badge/Client-Chrome%20on%20Android-4285F4.svg?logo=googlechrome&logoColor=white)](https://www.google.com/chrome/)
@@ -57,15 +60,38 @@
 
 ---
 
-### 1. Launch the Server
+### 1. Installation & Setup
 
-Clone or navigate to the repository directory on your laptop and run the startup script:
+Choose your preferred way to install:
+
+#### Option A: One-Command Automated Setup (Recommended)
+Configures automatic passwordless udev rules, builds the virtualenv, and adds a desktop launcher:
+```bash
+git clone https://github.com/gnshx/remote-control.git
+cd remote-control
+chmod +x install.sh
+./install.sh
+```
+
+#### Option B: Install via pip
+Install directly as a system CLI tool:
+```bash
+pip install git+https://github.com/gnshx/remote-control.git
+# Then launch anywhere:
+phone-gamepad
+```
+
+---
+
+### 2. Launch the Server
+
+Run the startup script:
 
 ```bash
 ./start.sh
 ```
 
-*(Alternatively, run `.venv/bin/python run.py` directly).*
+*(Or run `phone-gamepad` or `python3 run.py` directly).*
 
 The terminal will automatically:
 - Detect your laptop's local LAN IP (e.g. `192.168.1.15` or `10.10.x.x`).
@@ -377,10 +403,13 @@ echo $XDG_SESSION_TYPE
 ## 📁 Project Structure
 
 ```
-phone-remote-controller/
-├── mobile/                      # Mobile Web Controller (Runs in Chrome on Android)
-│   ├── index.html              # Controller UI, joystick, action buttons, mapping editor
-│   ├── styles.css              # Dark glassmorphic theme, responsive styling, HUD
+├── .github/
+│   ├── workflows/              # GitHub Actions CI/CD workflows (Tests, PyPI build)
+│   ├── ISSUE_TEMPLATE/         # Bug, layout request, and feature templates
+│   └── pull_request_template.md# Pull request checklist
+├── mobile/                     # Mobile Web Controller (Runs in Chrome on Android)
+│   ├── index.html              # Multi-layout controller views (Racing, D-Pad, etc.)
+│   ├── styles.css              # Dark neo-cyberpunk gaming UI design system
 │   ├── joystick.js             # Low-latency PointerEvents virtual thumbstick
 │   ├── key-mapping.js          # Profile manager & key mapping with localStorage
 │   ├── bluetooth.js            # Web Bluetooth API client for BLE connections
@@ -388,31 +417,35 @@ phone-remote-controller/
 │
 ├── laptop-agent/               # Ubuntu Laptop Agent (Python 3)
 │   ├── main.py                 # Standalone agent runner
-│   ├── transport/              # Network transport servers
-│   │   ├── websocket_server.py # WebSocket receiver with key state reconciliation
-│   │   └── ble_server.py       # BlueZ Bluetooth LE GATT peripheral server
-│   ├── controller/             # Key mapping engine
-│   │   └── mapping_engine.py   # Protocol key resolver & profile manager
-│   ├── input/                  # Keyboard injection adapters
-│   │   ├── pynput_adapter.py   # Universal pynput adapter
-│   │   ├── xtest_adapter.py    # Native X11 XTest adapter
-│   │   ├── uinput_adapter.py   # Linux kernel uinput adapter (Wayland)
-│   │   └── dry_run_adapter.py  # Mock logging adapter for testing
-│   ├── safety/                 # Safety & reliability systems
-│   │   └── watchdog.py         # 5.0-second silence watchdog
-│   ├── config/
-│   │   └── profiles.json       # Persisted default & custom profiles
-│   └── requirements.txt        # Python package dependencies
+│   ├── transport/              # Network transport servers (WebSocket + BLE)
+│   ├── controller/             # Key mapping engine & profile manager
+│   ├── input/                  # Keyboard injection (uinput for Wayland, pynput for X11)
+│   ├── safety/                 # Watchdog & release failsafes
+│   └── config/                 # Default profiles configuration
 │
-├── protocol/
-│   └── protocol.md             # Complete protocol specification
-├── run.py                      # Unified launcher (HTTP server + QR code + Agent)
+├── pyproject.toml              # Modern PEP 621 Python packaging (pip install)
+├── install.sh                  # Automated Linux installer with udev rule setup
 ├── start.sh                    # One-command startup script
-└── README.md                   # Complete documentation
+├── run.py                      # Unified launcher & CLI entrypoint
+├── CONTRIBUTING.md             # Community contribution guide
+├── CODE_OF_CONDUCT.md          # Contributor Covenant 2.1
+├── SECURITY.md                 # Local network security policy
+└── LICENSE                     # MIT License
 ```
+
+---
+
+## 🤝 Contributing
+
+Contributions are warmly welcome! Whether you want to add a preset for a new game, design a new visual layout skin, or improve input latency:
+
+1. Check out [CONTRIBUTING.md](CONTRIBUTING.md) for local dev setup and guidelines.
+2. Request or propose new game skins using the [New Game Layout Template](https://github.com/gnshx/remote-control/issues/new?template=new_game_layout.yml).
+3. Open a Pull Request!
 
 ---
 
 ## 📜 License
 
-MIT License. Open-source and free to customize, modify, and integrate into your own gaming setups!
+Distributed under the [MIT License](LICENSE). Open-source, permissive, and free for anyone to use, modify, and distribute.
+

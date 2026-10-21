@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phone-gamepad"
+version = "1.0.0"
+description = "Turn any smartphone into a zero-install wireless gamepad for your laptop with sub-5ms latency."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "Ganesh", email = "contact@gnshx.dev" }
+]
+maintainers = [
+    { name = "gnshx", email = "contact@gnshx.dev" }
+]
+keywords = [
+    "gamepad",
+    "controller",
+    "gaming",
+    "remote-control",
+    "smash-karts",
+    "uinput",
+    "wayland",
+    "x11",
+    "linux",
+    "websocket",
+    "virtual-joystick",
+    "mobile-gaming"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Games/Entertainment",
+    "Topic :: System :: Hardware :: Hardware Drivers",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "websockets>=12.0",
+    "qrcode[pil]>=7.4.2",
+    "pynput>=1.7.6",
+    "evdev>=1.7.0; sys_platform == 'linux'",
+    "python-xlib>=0.33; sys_platform == 'linux'",
+]
+
+[project.optional-dependencies]
+dev = [
+    "flake8>=6.0.0",
+    "pytest>=7.0.0",
+    "build>=1.0.0",
+    "twine>=4.0.0",
+]
+
+[project.scripts]
+phone-gamepad = "run:cli"
+phone-controller = "run:cli"
+
+[project.urls]
+Homepage = "https://github.com/gnshx/remote-control"
+Repository = "https://github.com/gnshx/remote-control.git"
+Issues = "https://github.com/gnshx/remote-control/issues"
+Changelog = "https://github.com/gnshx/remote-control/releases"
+
+[tool.setuptools]
+py-modules = ["run"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["laptop-agent*"]
+
+[tool.setuptools.package-data]
+"*" = ["mobile/**/*", "laptop-agent/config/*.json"]

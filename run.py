@@ -254,8 +254,13 @@ async def main():
         log.info("Shutdown complete. All keys released safely.")
 
 
-if __name__ == "__main__":
+def cli():
+    """Console script entrypoint for pip / packaging."""
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
         print("\nExited.")
+
+
+if __name__ == "__main__":
+    cli()

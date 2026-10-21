@@ -1,0 +1,54 @@
+name: 🐛 Bug Report
+description: Create a report to help us improve Phone Gamepad
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report an issue!
+
+  - type: input
+    id: os_session
+    attributes:
+      label: Operating System & Session
+      description: e.g. Ubuntu 24.04 Wayland, Arch Linux X11, Fedora KDE Wayland, SteamOS
+      placeholder: Ubuntu 24.04 (Wayland)
+    validations:
+      required: true
+
+  - type: input
+    id: phone_browser
+    attributes:
+      label: Phone & Mobile Browser
+      description: e.g. Samsung Galaxy S23 (Chrome 124), Pixel 8 (Chrome 125)
+      placeholder: Android Chrome 124
+    validations:
+      required: true
+
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: Describe the Bug
+      description: A clear description of what went wrong.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction_steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this?
+      value: |
+        1. Run `./start.sh`
+        2. Scan QR code on phone
+        3. Tap 'Connect'
+        4. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Terminal Logs / Browser Console
+      description: Paste any output from the laptop terminal or browser console.
+      render: shell
