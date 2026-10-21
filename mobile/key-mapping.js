@@ -21,6 +21,20 @@ const DEFAULT_PROFILES = {
       brake:      { key: 'SHIFT', mode: 'hold', icon: '🛑',  label: 'Brake',      button: 'btn_shift'      },
     }
   },
+  racing: {
+    name: 'Racing / Driving',
+    icon: '🏎️',
+    mappings: {
+      move_up:    { key: 'W',     mode: 'hold', icon: '⚡',  label: 'Gas / Accel',button: 'btn_pedal_gas'  },
+      move_down:  { key: 'S',     mode: 'hold', icon: '🛑',  label: 'Brake / Rev',button: 'btn_pedal_brake'},
+      move_left:  { key: 'A',     mode: 'hold', icon: '◀',   label: 'Steer Left', button: 'btn_race_left' },
+      move_right: { key: 'D',     mode: 'hold', icon: '▶',   label: 'Steer Right',button: 'btn_race_right'},
+      fire:       { key: 'SPACE', mode: 'hold', icon: '🚀',  label: 'Nitro / Boost',button: 'btn_race_nitro'},
+      special:    { key: 'E',     mode: 'tap',  icon: '⚡',  label: 'Special',    button: 'btn_e'          },
+      item:       { key: 'Q',     mode: 'tap',  icon: '🎯',  label: 'Item',       button: 'btn_q'          },
+      brake:      { key: 'SHIFT', mode: 'hold', icon: '💨',  label: 'Drift',      button: 'btn_race_drift' },
+    }
+  },
   wasd: {
     name: 'WASD Generic',
     icon: '⌨️',

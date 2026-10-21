@@ -39,6 +39,7 @@ const DOM = {
   connectScreen:     $('connect-screen'),
   controllerScreen:  $('controller-screen'),
   mappingScreen:     $('mapping-screen'),
+  layoutSelect:      $('layout-select'),
   tabWs:             $('tab-ws'),
   tabBle:            $('tab-ble'),
   wsForm:            $('ws-form'),
@@ -396,13 +397,72 @@ function resetConnectBtn() {
   DOM.connectBtn.disabled = false;
 }
 
-// ─── Action Buttons ───────────────────────────────────────────────────────────
+// ─── Layout Switcher ──────────────────────────────────────────────────────────
+function setupLayoutSwitcher() {
+  const savedLayout = localStorage.getItem('activeLayout') || 'action';
+  switchLayout(savedLayout, false);
+
+  DOM.layoutSelect?.addEventListener('change', () => {
+    switchLayout(DOM.layoutSelect.value, true);
+  });
+}
+
+function switchLayout(layoutId, notify = true) {
+  document.querySelectorAll('.controller-layout').forEach(l => l.classList.remove('active'));
+  const target = $(`layout-${layoutId}`);
+  if (target) {
+    target.classList.add('active');
+    localStorage.setItem('activeLayout', layoutId);
+    if (DOM.layoutSelect) DOM.layoutSelect.value = layoutId;
+
+    // Release all keys when switching layouts so nothing gets stuck
+    releaseAllKeys();
+
+    const titles = {
+      action:  '🎮 Smash Karts / Action',
+      racing:  '🏎️ Racing Cockpit (Pedals)',
+      dpad:    '🧭 Retro 4-Way D-Pad',
+      minimal: '🚗 Simple Steer & Pedals'
+    };
+    if (notify) {
+      toast(`Switched: ${titles[layoutId] || layoutId}`);
+      vibrate([25, 25]);
+    }
+  }
+}
+
+// ─── Action Buttons & Touch Controls ──────────────────────────────────────────
 function setupActionButtons() {
   const btns = [
-    { el: $('btn-fire'),  control: 'fire'    },
-    { el: $('btn-e'),     control: 'special' },
-    { el: $('btn-q'),     control: 'item'    },
-    { el: $('btn-shift'), control: 'brake'   },
+    // Layout 1: Smash Karts / Action
+    { el: $('btn-fire'),        control: 'fire'       },
+    { el: $('btn-e'),           control: 'special'    },
+    { el: $('btn-q'),           control: 'item'       },
+    { el: $('btn-shift'),       control: 'brake'      },
+
+    // Layout 2: Racing Cockpit (Pedals + Steer)
+    { el: $('btn-pedal-gas'),   control: 'move_up'    },
+    { el: $('btn-pedal-brake'), control: 'move_down'  },
+    { el: $('btn-race-left'),   control: 'move_left'  },
+    { el: $('btn-race-right'),  control: 'move_right' },
+    { el: $('btn-race-drift'),  control: 'brake'      },
+    { el: $('btn-race-nitro'),  control: 'fire'       },
+
+    // Layout 3: Retro 4-Way D-Pad
+    { el: $('dpad-up'),         control: 'move_up'    },
+    { el: $('dpad-down'),       control: 'move_down'  },
+    { el: $('dpad-left'),       control: 'move_left'  },
+    { el: $('dpad-right'),      control: 'move_right' },
+    { el: $('btn-diamond-b'),   control: 'fire'       },
+    { el: $('btn-diamond-a'),   control: 'brake'      },
+    { el: $('btn-diamond-x'),   control: 'item'       },
+    { el: $('btn-diamond-y'),   control: 'special'    },
+
+    // Layout 4: Simple Steer & Pedals
+    { el: $('btn-min-left'),    control: 'move_left'  },
+    { el: $('btn-min-right'),   control: 'move_right' },
+    { el: $('btn-min-gas'),     control: 'move_up'    },
+    { el: $('btn-min-brake'),   control: 'move_down'  },
   ];
 
   btns.forEach(({ el, control }) => {
@@ -655,7 +715,8 @@ function init() {
     }
   });
 
-  // Action buttons
+  // Action buttons & Layout Switcher
+  setupLayoutSwitcher();
   setupActionButtons();
 
   // Mapping screen

@@ -19,8 +19,9 @@
   - [1. Launch the Server](#1-launch-the-server)
   - [2. Connect Your Phone](#2-connect-your-phone)
   - [3. Focus & Play Smash Karts](#3-focus--play-smash-karts)
-  - [4. Customizing Key Mappings](#4-customizing-key-mappings)
-- [🎮 Default Controls for Smash Karts](#-default-controls-for-smash-karts)
+  - [4. Switch Between Controller Layouts & Profiles](#4-switch-between-controller-layouts--profiles)
+  - [5. Customizing Key Mappings](#5-customizing-key-mappings)
+- [🎮 Controller Layouts & Supported Game Types](#-controller-layouts--supported-game-types)
 - [🏗️ How We Built It & Technology Stack](#️-how-we-built-it--technology-stack)
   - [System Architecture Diagram](#system-architecture-diagram)
   - [Complete Technology Stack](#complete-technology-stack)
@@ -117,13 +118,35 @@ The terminal will automatically:
 
 ---
 
-### 4. Customizing Key Mappings
+---
+
+### 4. Switch Between Controller Layouts & Profiles
+
+Different games require different control setups. You can switch layouts directly from the dropdown in the center of the top bar at any time:
+
+1. **🎮 Smash Karts / Action**:
+   - Left: Smooth virtual analog joystick with dead-zone filtering for steering and throttle.
+   - Right: 4-button cluster with large red FIRE, purple DRIFT, blue ITEM, and yellow SPECIAL.
+2. **🏎️ Racing Cockpit (Pedals + Steer)**:
+   - Left: Responsive left and right steering pads, plus dedicated **DRIFT** and **NITRO** buttons.
+   - Right: Realistic 3D metallic pedals with textured rubber treads—tall **GAS (Accel)** pedal and wide **BRAKE (Reverse)** pedal with dynamic press depth.
+3. **🧭 Retro 4-Way D-Pad**:
+   - Left: Classic cross-shaped 4-way arcade D-Pad (`▲`, `▼`, `◀`, `▶`).
+   - Right: Authentic ABXY diamond action cluster for platformers and retro emulators.
+4. **🚗 Simple Steer & Pedals**:
+   - Left: Two oversized full-height left/right steering pads.
+   - Right: Two oversized full-height Gas and Brake pads for effortless driving without looking at the screen.
+
+---
+
+### 5. Customizing Key Mappings
 
 Want to use arrow keys, control a different game, or change button bindings?
 
 1. Tap the **⚙️ (Settings)** icon in the top right of the controller screen.
 2. Select a profile:
    - **🏎️ Smash Karts** (W/A/S/D + Space + Shift + Q + E)
+   - **🏎️ Racing / Driving** (Gas/Brake + Steer + Nitro + Drift)
    - **⌨️ WASD Generic** (Standard FPS / Action controls)
    - **⬆️ Arrow Keys** (Classic arcade / 2D platformers)
    - **⚙️ Custom** (User-defined configuration)
@@ -133,18 +156,14 @@ Want to use arrow keys, control a different game, or change button bindings?
 
 ---
 
-## 🎮 Default Controls for Smash Karts
+## 🎮 Controller Layouts & Supported Game Types
 
-| Phone Control | Button Color | Default Key | Game Action in Smash Karts | Mode |
-|---|---|---|---|---|
-| **Joystick Up** | Blue Ring | `W` | Accelerate / Drive Forward | Hold |
-| **Joystick Down** | Blue Ring | `S` | Reverse / Back Up | Hold |
-| **Joystick Left** | Blue Ring | `A` | Steer Left | Hold |
-| **Joystick Right** | Blue Ring | `D` | Steer Right | Hold |
-| **FIRE** | 🔴 Red | `SPACE` | Fire Active Weapon / Rocket / Gun | Hold |
-| **BRAKE** | 🟣 Purple | `SHIFT` | Drift / Sharp Cornering / Handbrake | Hold |
-| **SPECIAL** | 🟡 Yellow | `E` | Special Ability / Secondary Action | Tap |
-| **ITEM** | 🔵 Blue | `Q` | Use Picked-Up Mystery Box Item | Tap |
+| Interface Layout | Best Suited Games | Left-Hand Controls | Right-Hand Controls |
+|---|---|---|---|
+| **🎮 Smash Karts / Action** | Smash Karts, Kart games, 3D arenas | 360° Virtual Joystick (`W/A/S/D`) | `FIRE` (Space), `DRIFT` (Shift), `ITEM` (Q), `SPECIAL` (E) |
+| **🏎️ Racing Cockpit** | TrackMania, Need for Speed, WebGL racers | `STEER LEFT` (A), `STEER RIGHT` (D), `DRIFT` (Shift), `NITRO` (Space) | 3D Textured **GAS Pedal** (W) & **BRAKE Pedal** (S) |
+| **🧭 Retro 4-Way D-Pad** | Retro 2D games, Street Fighter, platformers | Cross D-Pad (`▲ W`, `▼ S`, `◀ A`, `▶ D`) | Diamond `B` (Space), `A` (Shift), `X` (Q), `Y` (E) |
+| **🚗 Simple Steer & Pedals** | Casual runners, hill climb games, simple driving | Large `STEER LEFT` (A), `STEER RIGHT` (D) | Large `BRAKE` (S) and `GAS` (W) |
 
 ---
 

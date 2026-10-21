@@ -61,6 +61,7 @@
         <label>Active Profile</label>
         <select id="active-profile-mini">
           <option value="smash_karts">🏎️ Smash Karts</option>
+          <option value="racing">🏁 Racing / Driving</option>
           <option value="wasd">⌨️ WASD Generic</option>
           <option value="arrows">⬆️ Arrow Keys</option>
           <option value="custom">⚙️ Custom</option>
@@ -82,7 +83,12 @@
         <span id="connection-label">Disconnected</span>
       </div>
       <div class="status-center">
-        <span id="profile-name-display">Smash Karts</span>
+        <select id="layout-select" class="layout-select" title="Switch Controller Interface">
+          <option value="action">🎮 Smash Karts / Action</option>
+          <option value="racing">🏎️ Racing Cockpit (Pedals)</option>
+          <option value="dpad">🧭 Retro 4-Way D-Pad</option>
+          <option value="minimal">🚗 Simple Steer & Pedals</option>
+        </select>
       </div>
       <div class="status-right">
         <span id="latency-display" class="latency">-- ms</span>
@@ -101,63 +107,201 @@
       <div class="key-pill" id="hud-e">E</div>
     </div>
 
-    <!-- Main Controller Area -->
+    <!-- Main Controller Area: Multi-Layout Container -->
     <div class="controller-area">
-      <!-- Left: Joystick -->
-      <div class="joystick-zone">
-        <div id="joystick-base" class="joystick-base">
-          <div class="joystick-ring"></div>
-          <div id="joystick-thumb" class="joystick-thumb">
-            <div class="joystick-inner"></div>
+
+      <!-- ==============================================
+           LAYOUT 1: SMASH KARTS / ACTION (Default)
+           ============================================== -->
+      <div id="layout-action" class="controller-layout active">
+        <!-- Left: Joystick -->
+        <div class="joystick-zone">
+          <div id="joystick-base" class="joystick-base">
+            <div class="joystick-ring"></div>
+            <div id="joystick-thumb" class="joystick-thumb">
+              <div class="joystick-inner"></div>
+            </div>
+            <div class="joystick-arrows">
+              <span class="arr arr-top">▲</span>
+              <span class="arr arr-right">▶</span>
+              <span class="arr arr-bottom">▼</span>
+              <span class="arr arr-left">◀</span>
+            </div>
           </div>
-          <div class="joystick-arrows">
-            <span class="arr arr-top">▲</span>
-            <span class="arr arr-right">▶</span>
-            <span class="arr arr-bottom">▼</span>
-            <span class="arr arr-left">◀</span>
+          <div class="joystick-label">STEER / DRIVE</div>
+        </div>
+
+        <!-- Right: Action Buttons -->
+        <div class="buttons-zone">
+          <div class="buttons-grid">
+            <div class="btn-row center-row">
+              <div class="action-btn-wrap">
+                <button id="btn-e" class="action-btn btn-yellow" data-action="special">
+                  <span class="btn-icon">⚡</span>
+                  <span class="btn-label" id="btn-e-label">SPECIAL</span>
+                </button>
+              </div>
+            </div>
+            <div class="btn-row middle-row">
+              <div class="action-btn-wrap">
+                <button id="btn-q" class="action-btn btn-blue" data-action="item">
+                  <span class="btn-icon">🎯</span>
+                  <span class="btn-label" id="btn-q-label">ITEM</span>
+                </button>
+              </div>
+              <div class="action-btn-wrap fire-wrap">
+                <button id="btn-fire" class="action-btn btn-fire" data-action="fire">
+                  <span class="btn-icon">💥</span>
+                  <span class="btn-label" id="btn-fire-label">FIRE</span>
+                </button>
+              </div>
+            </div>
+            <div class="btn-row bottom-row">
+              <div class="action-btn-wrap">
+                <button id="btn-shift" class="action-btn btn-purple" data-action="brake">
+                  <span class="btn-icon">🛑</span>
+                  <span class="btn-label" id="btn-shift-label">DRIFT</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="joystick-label">MOVE</div>
       </div>
 
-      <!-- Right: Action Buttons -->
-      <div class="buttons-zone">
-        <div class="buttons-grid">
-          <!-- Top button -->
-          <div class="btn-row center-row">
-            <div class="action-btn-wrap" style="grid-area: top;">
-              <button id="btn-e" class="action-btn btn-yellow" data-action="special">
-                <span class="btn-icon">⚡</span>
-                <span class="btn-label" id="btn-e-label">E</span>
-              </button>
-            </div>
+      <!-- ==============================================
+           LAYOUT 2: RACING COCKPIT (Pedals + Steer)
+           ============================================== -->
+      <div id="layout-racing" class="controller-layout">
+        <!-- Left: Steering Zone (Wheel / Analog Steer) -->
+        <div class="racing-steer-zone">
+          <div class="steer-buttons-wrap">
+            <button id="btn-race-left" class="steer-btn" data-key="A" data-label="STEER LEFT">
+              <span class="steer-icon">◀</span>
+              <span class="steer-text">LEFT</span>
+            </button>
+            <button id="btn-race-right" class="steer-btn" data-key="D" data-label="STEER RIGHT">
+              <span class="steer-icon">▶</span>
+              <span class="steer-text">RIGHT</span>
+            </button>
           </div>
-          <!-- Middle row -->
-          <div class="btn-row middle-row">
-            <div class="action-btn-wrap">
-              <button id="btn-q" class="action-btn btn-blue" data-action="item">
-                <span class="btn-icon">🎯</span>
-                <span class="btn-label" id="btn-q-label">Q</span>
-              </button>
-            </div>
-            <div class="action-btn-wrap fire-wrap">
-              <button id="btn-fire" class="action-btn btn-fire" data-action="fire">
-                <span class="btn-icon">💥</span>
-                <span class="btn-label" id="btn-fire-label">FIRE</span>
-              </button>
-            </div>
+          <div class="race-aux-wrap">
+            <button id="btn-race-drift" class="race-aux-btn btn-purple" data-key="SHIFT">
+              <span>💨 DRIFT</span>
+            </button>
+            <button id="btn-race-nitro" class="race-aux-btn btn-yellow" data-key="SPACE">
+              <span>⚡ NITRO / FIRE</span>
+            </button>
           </div>
-          <!-- Bottom row -->
-          <div class="btn-row bottom-row">
-            <div class="action-btn-wrap">
-              <button id="btn-shift" class="action-btn btn-purple" data-action="brake">
-                <span class="btn-icon">🛑</span>
-                <span class="btn-label" id="btn-shift-label">BRAKE</span>
-              </button>
-            </div>
+        </div>
+
+        <!-- Right: Accelerator & Brake Pedals -->
+        <div class="racing-pedals-zone">
+          <!-- Brake / Reverse Pedal -->
+          <div class="pedal-wrap">
+            <button id="btn-pedal-brake" class="pedal pedal-brake" data-key="S">
+              <div class="pedal-treads">
+                <span></span><span></span><span></span><span></span>
+              </div>
+              <div class="pedal-label">
+                <span class="pedal-icon">🛑</span>
+                <span class="pedal-title">BRAKE</span>
+                <span class="pedal-sub">REVERSE</span>
+              </div>
+            </button>
+          </div>
+
+          <!-- Gas / Accelerator Pedal -->
+          <div class="pedal-wrap">
+            <button id="btn-pedal-gas" class="pedal pedal-gas" data-key="W">
+              <div class="pedal-treads">
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+              <div class="pedal-label">
+                <span class="pedal-icon">⚡</span>
+                <span class="pedal-title">GAS</span>
+                <span class="pedal-sub">ACCEL</span>
+              </div>
+            </button>
           </div>
         </div>
       </div>
+
+      <!-- ==============================================
+           LAYOUT 3: RETRO 4-WAY D-PAD (Arcade / Platformers)
+           ============================================== -->
+      <div id="layout-dpad" class="controller-layout">
+        <!-- Left: Authentic Cross D-Pad -->
+        <div class="dpad-zone">
+          <div class="dpad-cross">
+            <button id="dpad-up" class="dpad-dir dpad-up" data-dir="up" data-key="W">
+              <span>▲</span>
+            </button>
+            <div class="dpad-middle-row">
+              <button id="dpad-left" class="dpad-dir dpad-left" data-dir="left" data-key="A">
+                <span>◀</span>
+              </button>
+              <div class="dpad-center"></div>
+              <button id="dpad-right" class="dpad-dir dpad-right" data-dir="right" data-key="D">
+                <span>▶</span>
+              </button>
+            </div>
+            <button id="dpad-down" class="dpad-dir dpad-down" data-dir="down" data-key="S">
+              <span>▼</span>
+            </button>
+          </div>
+          <div class="joystick-label">D-PAD</div>
+        </div>
+
+        <!-- Right: Classic 4-Button Action Cluster (ABXY) -->
+        <div class="diamond-zone">
+          <div class="diamond-grid">
+            <button id="btn-diamond-y" class="diamond-btn btn-yellow" data-key="E">
+              <span class="diamond-letter">Y</span>
+            </button>
+            <div class="diamond-middle">
+              <button id="btn-diamond-x" class="diamond-btn btn-blue" data-key="Q">
+                <span class="diamond-letter">X</span>
+              </button>
+              <button id="btn-diamond-b" class="diamond-btn btn-fire" data-key="SPACE">
+                <span class="diamond-letter">B</span>
+              </button>
+            </div>
+            <button id="btn-diamond-a" class="diamond-btn btn-green" data-key="SHIFT">
+              <span class="diamond-letter">A</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==============================================
+           LAYOUT 4: SIMPLE STEER & PEDALS (Minimalist)
+           ============================================== -->
+      <div id="layout-minimal" class="controller-layout">
+        <!-- Left: Large Left / Right Steer Buttons -->
+        <div class="minimal-steer-zone">
+          <button id="btn-min-left" class="big-steer-btn" data-key="A">
+            <span class="big-icon">◀◀</span>
+            <span class="big-text">STEER LEFT</span>
+          </button>
+          <button id="btn-min-right" class="big-steer-btn" data-key="D">
+            <span class="big-icon">▶▶</span>
+            <span class="big-text">STEER RIGHT</span>
+          </button>
+        </div>
+
+        <!-- Right: Large Gas & Brake Buttons -->
+        <div class="minimal-pedals-zone">
+          <button id="btn-min-brake" class="big-action-btn min-brake" data-key="S">
+            <span class="big-icon">🛑</span>
+            <span class="big-text">BRAKE</span>
+          </button>
+          <button id="btn-min-gas" class="big-action-btn min-gas" data-key="W">
+            <span class="big-icon">⚡</span>
+            <span class="big-text">GAS</span>
+          </button>
+        </div>
+      </div>
+
     </div>
 
     <!-- Bottom Controls -->
@@ -179,6 +323,7 @@
 
       <div class="profile-tabs">
         <button class="tab-btn active" data-profile="smash_karts">🏎️ Smash Karts</button>
+        <button class="tab-btn" data-profile="racing">🏁 Racing</button>
         <button class="tab-btn" data-profile="wasd">⌨️ WASD</button>
         <button class="tab-btn" data-profile="arrows">⬆️ Arrows</button>
         <button class="tab-btn" data-profile="custom">⚙️ Custom</button>

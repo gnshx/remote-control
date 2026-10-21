@@ -14,6 +14,19 @@
         "brake":      {"key": "SHIFT", "mode": "hold"}
       }
     },
+    "racing": {
+      "name": "Racing / Driving",
+      "mappings": {
+        "move_up":    {"key": "W",     "mode": "hold"},
+        "move_down":  {"key": "S",     "mode": "hold"},
+        "move_left":  {"key": "A",     "mode": "hold"},
+        "move_right": {"key": "D",     "mode": "hold"},
+        "fire":       {"key": "SPACE", "mode": "hold"},
+        "special":    {"key": "E",     "mode": "tap"},
+        "item":       {"key": "Q",     "mode": "tap"},
+        "brake":      {"key": "SHIFT", "mode": "hold"}
+      }
+    },
     "wasd": {
       "name": "WASD Generic",
       "mappings": {
