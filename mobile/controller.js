@@ -108,8 +108,13 @@ function showScreen(id) {
 
 // ─── Multi-Transport: WebSocket & Bluetooth LE ──────────────────────────────
 function connectWs() {
-  const ip   = DOM.serverIp.value.trim();
-  const port = DOM.serverPort.value.trim();
+  let ip   = DOM.serverIp.value.trim();
+  const port = DOM.serverPort.value.trim() || '8765';
+
+  if (!ip && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    ip = window.location.hostname;
+    DOM.serverIp.value = ip;
+  }
 
   if (!ip) { showError('Please enter the laptop IP address.'); return; }
 
@@ -123,16 +128,27 @@ function connectWs() {
   localStorage.setItem('lastIp',   ip);
   localStorage.setItem('lastPort', port);
 
+  // Connection timeout failsafe
+  const connectTimeout = setTimeout(() => {
+    if (!app.connected && app.ws && app.ws.readyState !== WebSocket.OPEN) {
+      try { app.ws.close(); } catch (_) {}
+      showError(`Connection timed out (${ip}:${port}). Verify phone and laptop are on same Wi-Fi.`);
+      resetConnectBtn();
+    }
+  }, 6000);
+
   try {
     app.ws = new WebSocket(url);
     app.transportMode = 'ws';
   } catch (e) {
+    clearTimeout(connectTimeout);
     showError(`Invalid address: ${e.message}`);
     resetConnectBtn();
     return;
   }
 
   app.ws.onopen = () => {
+    clearTimeout(connectTimeout);
     app.connected = true;
     resetConnectBtn();
 
@@ -155,11 +171,13 @@ function connectWs() {
   };
 
   app.ws.onerror = () => {
-    showError('Connection failed. Make sure the laptop agent is running.');
+    clearTimeout(connectTimeout);
+    showError(`Connection failed to ${ip}:${port}. Make sure laptop agent is running.`);
     resetConnectBtn();
   };
 
   app.ws.onclose = () => {
+    clearTimeout(connectTimeout);
     if (app.connected) {
       app.connected = false;
       setConnectionUI(false);
@@ -346,55 +364,58 @@ function releaseAllKeys() {
 
 // ─── HUD update ───────────────────────────────────────────────────────────────
 function updateHUD(keys) {
-  const mapping = app.mappingManager.activeMapping;
+  const mapping = app.mappingManager?.activeMapping;
+  if (!mapping) return;
 
   // Map key → HUD element
   const keyToHud = {
-    [mapping.move_up?.key]:    DOM.hudKeys.W,
-    [mapping.move_left?.key]:  DOM.hudKeys.A,
-    [mapping.move_down?.key]:  DOM.hudKeys.S,
-    [mapping.move_right?.key]: DOM.hudKeys.D,
-    [mapping.fire?.key]:       DOM.hudKeys.SPACE,
-    [mapping.special?.key]:    DOM.hudKeys.E,
+    [mapping.move_up?.key]:    DOM.hudKeys?.W,
+    [mapping.move_left?.key]:  DOM.hudKeys?.A,
+    [mapping.move_down?.key]:  DOM.hudKeys?.S,
+    [mapping.move_right?.key]: DOM.hudKeys?.D,
+    [mapping.fire?.key]:       DOM.hudKeys?.SPACE,
+    [mapping.special?.key]:    DOM.hudKeys?.E,
   };
 
   // Update labels to match current mapping
-  if (DOM.hudKeys.W)     DOM.hudKeys.W.textContent     = mapping.move_up?.key     || 'W';
-  if (DOM.hudKeys.A)     DOM.hudKeys.A.textContent     = mapping.move_left?.key   || 'A';
-  if (DOM.hudKeys.S)     DOM.hudKeys.S.textContent     = mapping.move_down?.key   || 'S';
-  if (DOM.hudKeys.D)     DOM.hudKeys.D.textContent     = mapping.move_right?.key  || 'D';
-  if (DOM.hudKeys.SPACE) DOM.hudKeys.SPACE.textContent = mapping.fire?.key        || 'SPC';
-  if (DOM.hudKeys.E)     DOM.hudKeys.E.textContent     = mapping.special?.key     || 'E';
+  if (DOM.hudKeys?.W)     DOM.hudKeys.W.textContent     = mapping.move_up?.key     || 'W';
+  if (DOM.hudKeys?.A)     DOM.hudKeys.A.textContent     = mapping.move_left?.key   || 'A';
+  if (DOM.hudKeys?.S)     DOM.hudKeys.S.textContent     = mapping.move_down?.key   || 'S';
+  if (DOM.hudKeys?.D)     DOM.hudKeys.D.textContent     = mapping.move_right?.key  || 'D';
+  if (DOM.hudKeys?.SPACE) DOM.hudKeys.SPACE.textContent = mapping.fire?.key        || 'SPC';
+  if (DOM.hudKeys?.E)     DOM.hudKeys.E.textContent     = mapping.special?.key     || 'E';
 
   // Activate/deactivate
   for (const [key, el] of Object.entries(keyToHud)) {
-    if (el) el.classList.toggle('active', keys.has(key));
+    if (el) el.classList.toggle('active', keys?.has(key));
   }
 }
 
 // ─── Connection UI ────────────────────────────────────────────────────────────
 function setConnectionUI(connected, label) {
   if (connected) {
-    DOM.connectionDot.className   = 'status-dot connected';
-    DOM.connectionLabel.textContent = label || 'Connected';
+    if (DOM.connectionDot)   DOM.connectionDot.className     = 'status-dot connected';
+    if (DOM.connectionLabel) DOM.connectionLabel.textContent = label || 'Connected';
   } else {
-    DOM.connectionDot.className   = 'status-dot disconnected';
-    DOM.connectionLabel.textContent = 'Disconnected';
-    DOM.latencyDisplay.textContent  = '-- ms';
+    if (DOM.connectionDot)   DOM.connectionDot.className     = 'status-dot disconnected';
+    if (DOM.connectionLabel) DOM.connectionLabel.textContent = 'Disconnected';
+    if (DOM.latencyDisplay)  DOM.latencyDisplay.textContent  = '-- ms';
   }
 }
 
 function showError(msg) {
-  DOM.connectError.textContent = msg;
-  DOM.connectError.classList.remove('hidden');
+  if (DOM.connectError) {
+    DOM.connectError.textContent = msg;
+    DOM.connectError.classList.remove('hidden');
+  }
 }
 function hideError() {
-  DOM.connectError.classList.add('hidden');
+  DOM.connectError?.classList.add('hidden');
 }
 function resetConnectBtn() {
-  DOM.connectBtnText.classList.remove('hidden');
-  DOM.connectBtnLoader.classList.add('hidden');
-  DOM.connectBtn.disabled = false;
+  DOM.connectBtnText?.classList.remove('hidden');
+  DOM.connectBtnLoader?.classList.add('hidden');
+  if (DOM.connectBtn) DOM.connectBtn.disabled = false;
 }
 
 // ─── Layout Switcher ──────────────────────────────────────────────────────────
@@ -416,7 +437,9 @@ function switchLayout(layoutId, notify = true) {
     if (DOM.layoutSelect) DOM.layoutSelect.value = layoutId;
 
     // Release all keys when switching layouts so nothing gets stuck
-    releaseAllKeys();
+    if (app.connected) {
+      releaseAllKeys();
+    }
 
     const titles = {
       action:  '🎮 Smash Karts / Action',
@@ -615,8 +638,8 @@ function setupMappingScreen() {
   DOM.saveMappingBtn.addEventListener('click', () => {
     saveMappings(currentMappingProfile);
     app.mappingManager.setActiveProfile(currentMappingProfile);
-    DOM.activeProfileMini.value = currentMappingProfile;
-    DOM.profileNameDisplay.textContent = app.mappingManager.activeProfileName;
+    if (DOM.activeProfileMini) DOM.activeProfileMini.value = currentMappingProfile;
+    if (DOM.profileNameDisplay) DOM.profileNameDisplay.textContent = app.mappingManager.activeProfileName;
     toast('✅ Saved!', 'success');
     vibrate([20, 10, 20]);
     setTimeout(() => showScreen(app.connected ? 'controller-screen' : 'connect-screen'), 400);
@@ -639,15 +662,19 @@ function init() {
   // Create mapping manager
   app.mappingManager = new KeyMappingManager();
 
-  // Restore last IP/port, or auto-fill from current URL hostname
+  // Auto-fill IP from current URL hostname first (most reliable on mobile Wi-Fi)
   const lastIp   = localStorage.getItem('lastIp');
   const lastPort = localStorage.getItem('lastPort');
-  if (lastIp) {
-    DOM.serverIp.value = lastIp;
-  } else if (window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+  if (window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
     DOM.serverIp.value = window.location.hostname;
+  } else if (lastIp) {
+    DOM.serverIp.value = lastIp;
   }
-  if (lastPort) DOM.serverPort.value = lastPort;
+  if (lastPort) {
+    DOM.serverPort.value = lastPort;
+  } else {
+    DOM.serverPort.value = '8765';
+  }
 
   // Transport toggle tabs
   DOM.tabWs?.addEventListener('click', () => {
@@ -665,20 +692,20 @@ function init() {
   });
 
   // Set active profile in mini selector
-  DOM.activeProfileMini.value = app.mappingManager.activeProfileId;
-  DOM.profileNameDisplay.textContent = app.mappingManager.activeProfileName;
+  if (DOM.activeProfileMini) DOM.activeProfileMini.value = app.mappingManager.activeProfileId;
+  if (DOM.profileNameDisplay) DOM.profileNameDisplay.textContent = app.mappingManager.activeProfileName;
 
   // Profile selector on connect screen
-  DOM.activeProfileMini.addEventListener('change', () => {
+  DOM.activeProfileMini?.addEventListener('change', () => {
     app.mappingManager.setActiveProfile(DOM.activeProfileMini.value);
-    DOM.profileNameDisplay.textContent = app.mappingManager.activeProfileName;
+    if (DOM.profileNameDisplay) DOM.profileNameDisplay.textContent = app.mappingManager.activeProfileName;
   });
 
   // Connect buttons
-  DOM.connectBtn.addEventListener('click', connectWs);
+  DOM.connectBtn?.addEventListener('click', connectWs);
   DOM.bleConnectBtn?.addEventListener('click', connectBle);
-  DOM.serverIp.addEventListener('keydown', e => { if (e.key === 'Enter') connectWs(); });
-  DOM.serverPort.addEventListener('keydown', e => { if (e.key === 'Enter') connectWs(); });
+  DOM.serverIp?.addEventListener('keydown', e => { if (e.key === 'Enter') connectWs(); });
+  DOM.serverPort?.addEventListener('keydown', e => { if (e.key === 'Enter') connectWs(); });
 
   // Disconnect
   DOM.disconnectBtn?.addEventListener('click', () => {
