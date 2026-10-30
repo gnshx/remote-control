@@ -649,7 +649,7 @@ function resetConnectBtn() {
 
 // ─── Layout Switcher ──────────────────────────────────────────────────────────
 function setupLayoutSwitcher() {
-  const savedLayout = localStorage.getItem('activeLayout') || 'action';
+  const savedLayout = localStorage.getItem('activeLayout') || 'kart';
   switchLayout(savedLayout, false);
 
   DOM.layoutSelect?.addEventListener('change', () => {
@@ -674,6 +674,7 @@ function switchLayout(layoutId, notify = true) {
     }
 
     const titles = {
+      kart:    '🏎️ Kart (2 Pedals + 2 Arrows)',
       action:  '🎮 Smash Karts / Action',
       racing:  '🏎️ Racing Cockpit (Pedals)',
       dpad:    '🧭 Retro 4-Way D-Pad',
@@ -689,6 +690,14 @@ function switchLayout(layoutId, notify = true) {
 // ─── Action Buttons & Touch Controls ──────────────────────────────────────────
 function setupActionButtons() {
   const btns = [
+    // Layout 0: Kart Racing (2 Pedals + 2 Arrows)
+    { el: $('btn-kart-left'),   control: 'move_left'  },
+    { el: $('btn-kart-brake'),  control: 'move_down'  },
+    { el: $('btn-kart-right'),  control: 'move_right' },
+    { el: $('btn-kart-gas'),    control: 'move_up'    },
+    { el: $('btn-kart-fire'),   control: 'fire'       },
+    { el: $('btn-kart-drift'),  control: 'brake'      },
+
     // Layout 1: Smash Karts / Action
     { el: $('btn-fire'),        control: 'fire'       },
     { el: $('btn-e'),           control: 'special'    },

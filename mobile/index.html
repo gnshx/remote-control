@@ -96,6 +96,7 @@
       </div>
       <div class="status-center">
         <select id="layout-select" class="layout-select" title="Switch Controller Interface">
+          <option value="kart" selected>🏎️ Kart (2 Pedals + 2 Arrows)</option>
           <option value="action">🎮 Smash Karts / Action</option>
           <option value="racing">🏎️ Racing Cockpit (Pedals)</option>
           <option value="dpad">🧭 Retro 4-Way D-Pad</option>
@@ -173,9 +174,107 @@
     <div class="controller-area">
 
       <!-- ==============================================
-           LAYOUT 1: SMASH KARTS / ACTION (Default)
+           LAYOUT 0: KART RACING (2 Pedals + 2 Arrows)
+           Authentic Glassmorphic Mobile Kart Controls
            ============================================== -->
-      <div id="layout-action" class="controller-layout active">
+      <div id="layout-kart" class="controller-layout active">
+        <!-- Left Side: Steer Left Arrow + Brake / Reverse Pedal -->
+        <div class="kart-side-zone kart-left-zone hud-custom-zone" data-zone-id="kart-left">
+          <div class="zone-drag-handle">✥ DRAG TO MOVE</div>
+          
+          <!-- Steer Left Arrow Button -->
+          <div class="kart-btn-wrap">
+            <button id="btn-kart-left" class="kart-arrow-btn kart-arrow-left" data-key="A" data-label="STEER LEFT" aria-label="Steer Left">
+              <svg class="kart-chevron" viewBox="0 0 44 44" aria-hidden="true">
+                <path d="M28 8 L14 22 L28 36" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Brake / Reverse Pedal -->
+          <div class="kart-pedal-wrap">
+            <button id="btn-kart-brake" class="kart-pedal-btn kart-pedal-brake" data-key="S" data-label="BRAKE / REVERSE" aria-label="Brake and Reverse Pedal">
+              <div class="kart-pedal-plate">
+                <div class="kart-pedal-dots-grid">
+                  <div class="kart-dots-row">
+                    <span></span><span></span><span></span><span></span><span></span>
+                  </div>
+                  <div class="kart-dots-row">
+                    <span></span><span></span><span></span><span></span><span></span>
+                  </div>
+                </div>
+                <div class="kart-pedal-label">
+                  <span class="kart-pedal-tag">BRAKE</span>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Center Spacer for clean road view -->
+        <div class="kart-center-spacer"></div>
+
+        <!-- Upper Right Actions: Item / Fire Button (Spike Ball) & Drift Button -->
+        <div class="kart-actions-zone hud-custom-zone" data-zone-id="kart-actions">
+          <div class="zone-drag-handle">✥ DRAG TO MOVE</div>
+          <button id="btn-kart-fire" class="kart-item-btn" data-key="SPACE" data-label="USE ITEM / FIRE" aria-label="Use Item or Fire Weapon">
+            <div class="kart-item-glow"></div>
+            <div class="kart-item-inner">
+              <svg class="kart-spikes-icon" viewBox="0 0 54 54" fill="none" aria-hidden="true">
+                <!-- Spiked ball weapons cluster matching game screenshot -->
+                <circle cx="27" cy="27" r="11" fill="#1e293b" stroke="#94a3b8" stroke-width="2"/>
+                <path d="M27 7 L27 14 M27 40 L27 47 M7 27 L14 27 M40 27 L47 27 M13 13 L18 18 M36 36 L41 41 M13 41 L18 36 M36 18 L41 13" stroke="#f1f5f9" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="16" cy="16" r="4.5" fill="#334155" stroke="#cbd5e1" stroke-width="1.5"/>
+                <circle cx="38" cy="16" r="4.5" fill="#334155" stroke="#cbd5e1" stroke-width="1.5"/>
+                <circle cx="38" cy="38" r="4.5" fill="#334155" stroke="#cbd5e1" stroke-width="1.5"/>
+                <circle cx="16" cy="38" r="4.5" fill="#334155" stroke="#cbd5e1" stroke-width="1.5"/>
+              </svg>
+            </div>
+            <div class="kart-item-badge">6</div>
+          </button>
+          <button id="btn-kart-drift" class="kart-drift-btn" data-key="SHIFT" data-label="DRIFT" aria-label="Drift Powerslide">
+            <span>💨 DRIFT</span>
+          </button>
+        </div>
+
+        <!-- Right Side: Steer Right Arrow + Gas / Accelerate Pedal -->
+        <div class="kart-side-zone kart-right-zone hud-custom-zone" data-zone-id="kart-right">
+          <div class="zone-drag-handle">✥ DRAG TO MOVE</div>
+
+          <!-- Steer Right Arrow Button -->
+          <div class="kart-btn-wrap">
+            <button id="btn-kart-right" class="kart-arrow-btn kart-arrow-right" data-key="D" data-label="STEER RIGHT" aria-label="Steer Right">
+              <svg class="kart-chevron" viewBox="0 0 44 44" aria-hidden="true">
+                <path d="M16 8 L30 22 L16 36" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Gas / Accelerator Pedal -->
+          <div class="kart-pedal-wrap">
+            <button id="btn-kart-gas" class="kart-pedal-btn kart-pedal-gas" data-key="W" data-label="GAS / ACCEL" aria-label="Gas and Accelerate Pedal">
+              <div class="kart-pedal-plate">
+                <div class="kart-pedal-dots-grid">
+                  <div class="kart-dots-row">
+                    <span></span><span></span><span></span><span></span><span></span>
+                  </div>
+                  <div class="kart-dots-row">
+                    <span></span><span></span><span></span><span></span><span></span>
+                  </div>
+                </div>
+                <div class="kart-pedal-label">
+                  <span class="kart-pedal-tag">GAS</span>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==============================================
+           LAYOUT 1: SMASH KARTS / ACTION
+           ============================================== -->
+      <div id="layout-action" class="controller-layout">
         <!-- Left: Joystick -->
         <div class="joystick-zone hud-custom-zone" data-zone-id="action-left">
           <div class="zone-drag-handle">✥ DRAG TO MOVE</div>

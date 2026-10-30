@@ -301,6 +301,7 @@ To inject touches directly into any native Android game:
 
 | Interface Layout | Best Suited Games | Left-Hand Controls | Right-Hand Controls |
 |---|---|---|---|
+| **🏎️ Kart Racing (Pedals & Arrows)** | Smash Karts, Kart games, Mobile racers | Frosted **STEER LEFT** (A) & Perforated **BRAKE Pedal** (S) | Frosted **STEER RIGHT** (D) & Perforated **GAS Pedal** (W) + **ITEM / FIRE** & **DRIFT** |
 | **🎮 Smash Karts / Action** | Smash Karts, Kart games, 3D arenas | 360° Virtual Joystick (`W/A/S/D`) | `FIRE` (Space), `DRIFT` (Shift), `ITEM` (Q), `SPECIAL` (E) |
 | **🏎️ Racing Cockpit** | TrackMania, Need for Speed, WebGL racers | `STEER LEFT` (A), `STEER RIGHT` (D), `DRIFT` (Shift), `NITRO` (Space) | 3D Textured **GAS Pedal** (W) & **BRAKE Pedal** (S) |
 | **🧭 Retro 4-Way D-Pad** | Retro 2D games, Street Fighter, platformers | Cross D-Pad (`▲ W`, `▼ S`, `◀ A`, `▶ D`) | Diamond `B` (Space), `A` (Shift), `X` (Q), `Y` (E) |

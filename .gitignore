@@ -31,3 +31,9 @@ Thumbs.db
 # Local logs & scratch
 *.log
 scratch/
+
+# Secrets & Environment variables
+.env
+.env.*
+credentials.json
+token.json

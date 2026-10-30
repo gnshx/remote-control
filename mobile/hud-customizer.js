@@ -6,6 +6,9 @@
 'use strict';
 
 const ZONE_METADATA = {
+  'kart-left':     { name: '◀ Steer Left & Brake Pedal', defaultX: 0, defaultY: 0 },
+  'kart-right':    { name: '▶ Steer Right & Gas Pedal',   defaultX: 0, defaultY: 0 },
+  'kart-actions':  { name: '💥 Item & Drift Actions',     defaultX: 0, defaultY: 0 },
   'action-left':   { name: '🕹️ Joystick', defaultX: 0, defaultY: 0 },
   'action-right':  { name: '🎯 Action Buttons', defaultX: 0, defaultY: 0 },
   'racing-left':   { name: '🚗 Steer & Aux', defaultX: 0, defaultY: 0 },
