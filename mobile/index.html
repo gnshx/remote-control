@@ -96,7 +96,7 @@
       </div>
       <div class="status-center">
         <select id="layout-select" class="layout-select" title="Switch Controller Interface">
-          <option value="kart" selected>🏎️ Horizontal Kart (4 Controls: 2 Arrows + 2 Pedals)</option>
+          <option value="kart" selected>🏎️ Horizontal Kart (Steer, Pedals & Fire Weapon)</option>
           <option value="action">🎮 Smash Karts / Action</option>
           <option value="racing">🏎️ Racing Cockpit (Pedals)</option>
           <option value="dpad">🧭 Retro 4-Way D-Pad</option>
@@ -246,9 +246,63 @@
         <!-- Center Spacer for clean open horizontal road view -->
         <div class="kart-center-spacer"></div>
 
-        <!-- Right Side: Steer Right Arrow + Gas / Accel Pedal -->
+        <!-- Right Side: Fire Weapon + Steer Right Arrow + Gas / Accel Pedal -->
         <div class="kart-side-zone kart-right-zone hud-custom-zone" data-zone-id="kart-right">
           <div class="zone-drag-handle">✥ DRAG TO MOVE</div>
+
+          <!-- Fire Weapon / Item Button (Spiked Mine Cluster & 6 Badge) -->
+          <div class="kart-fire-wrap">
+            <button id="btn-kart-fire" class="kart-item-btn" data-key="SPACE" data-label="FIRE WEAPON" aria-label="Fire or Use Weapon">
+              <svg class="kart-fire-svg" viewBox="0 0 68 68" fill="none" aria-hidden="true">
+                <g class="spiked-ball" transform="translate(34, 18)">
+                  <circle cx="0" cy="0" r="7.5" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
+                  <polygon points="0,-12 -2.5,-7 2.5,-7" fill="#e2e8f0"/>
+                  <polygon points="12,0 7,-2.5 7,2.5" fill="#cbd5e1"/>
+                  <polygon points="0,12 -2.5,7 2.5,7" fill="#94a3b8"/>
+                  <polygon points="-12,0 -7,-2.5 -7,2.5" fill="#cbd5e1"/>
+                  <polygon points="8,-8 3.5,-6 6,-3.5" fill="#f1f5f9"/>
+                  <polygon points="-8,-8 -3.5,-6 -6,-3.5" fill="#f1f5f9"/>
+                </g>
+                <g class="spiked-ball" transform="translate(18, 30)">
+                  <circle cx="0" cy="0" r="7.5" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
+                  <polygon points="0,-12 -2.5,-7 2.5,-7" fill="#e2e8f0"/>
+                  <polygon points="12,0 7,-2.5 7,2.5" fill="#cbd5e1"/>
+                  <polygon points="0,12 -2.5,7 2.5,7" fill="#94a3b8"/>
+                  <polygon points="-12,0 -7,-2.5 -7,2.5" fill="#cbd5e1"/>
+                  <polygon points="8,-8 3.5,-6 6,-3.5" fill="#f1f5f9"/>
+                  <polygon points="-8,-8 -3.5,-6 -6,-3.5" fill="#f1f5f9"/>
+                </g>
+                <g class="spiked-ball" transform="translate(48, 28)">
+                  <circle cx="0" cy="0" r="7.5" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
+                  <polygon points="0,-12 -2.5,-7 2.5,-7" fill="#e2e8f0"/>
+                  <polygon points="12,0 7,-2.5 7,2.5" fill="#cbd5e1"/>
+                  <polygon points="0,12 -2.5,7 2.5,7" fill="#94a3b8"/>
+                  <polygon points="-12,0 -7,-2.5 -7,2.5" fill="#cbd5e1"/>
+                  <polygon points="8,-8 3.5,-6 6,-3.5" fill="#f1f5f9"/>
+                  <polygon points="-8,-8 -3.5,-6 -6,-3.5" fill="#f1f5f9"/>
+                </g>
+                <g class="spiked-ball" transform="translate(36, 46)">
+                  <circle cx="0" cy="0" r="8" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
+                  <polygon points="0,-13 -2.8,-7.5 2.8,-7.5" fill="#e2e8f0"/>
+                  <polygon points="13,0 7.5,-2.8 7.5,2.8" fill="#cbd5e1"/>
+                  <polygon points="0,13 -2.8,7.5 2.8,7.5" fill="#94a3b8"/>
+                  <polygon points="-13,0 -7.5,-2.8 -7.5,2.8" fill="#cbd5e1"/>
+                  <polygon points="9,-9 4,-6.5 6.5,-4" fill="#f1f5f9"/>
+                  <polygon points="-9,-9 -4,-6.5 -6.5,-4" fill="#f1f5f9"/>
+                  <polygon points="9,9 4,6.5 6.5,4" fill="#94a3b8"/>
+                  <polygon points="-9,9 -4,6.5 -6.5,4" fill="#94a3b8"/>
+                </g>
+                <g class="spiked-ball" transform="translate(54, 48)">
+                  <circle cx="0" cy="0" r="6" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
+                  <polygon points="0,-10 -2,-6 2,-6" fill="#e2e8f0"/>
+                  <polygon points="10,0 6,-2 6,2" fill="#cbd5e1"/>
+                  <polygon points="0,10 -2,6 2,6" fill="#94a3b8"/>
+                  <polygon points="-10,0 -6,-2 -6,2" fill="#cbd5e1"/>
+                </g>
+              </svg>
+              <div class="kart-item-badge">6</div>
+            </button>
+          </div>
 
           <!-- Steer Right Pointed Arrow Button -->
           <div class="kart-btn-wrap">

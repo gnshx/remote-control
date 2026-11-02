@@ -674,7 +674,7 @@ function switchLayout(layoutId, notify = true) {
     }
 
     const titles = {
-      kart: '🏎️ Horizontal Kart (4 Controls: 2 Arrows + 2 Pedals)',
+      kart: '🏎️ Horizontal Kart (Steer, Pedals & Fire Weapon)',
       action: '🎮 Smash Karts / Action',
       racing: '🏎️ Racing Cockpit (Pedals)',
       dpad: '🧭 Retro 4-Way D-Pad',
@@ -690,11 +690,12 @@ function switchLayout(layoutId, notify = true) {
 // ─── Action Buttons & Touch Controls ──────────────────────────────────────────
 function setupActionButtons() {
   const btns = [
-    // Layout 0: Horizontal Kart (ONLY 4 Controls: 2 Arrows + 2 Pedals)
+    // Layout 0: Horizontal Kart (Steer, Pedals & Fire Weapon)
     { el: $('btn-kart-left'), control: 'move_left' },
     { el: $('btn-kart-brake'), control: 'move_down' },
     { el: $('btn-kart-right'), control: 'move_right' },
     { el: $('btn-kart-gas'), control: 'move_up' },
+    { el: $('btn-kart-fire'), control: 'fire' },
 
     // Layout 1: Smash Karts / Action
     { el: $('btn-fire'), control: 'fire' },

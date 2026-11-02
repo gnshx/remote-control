@@ -547,6 +547,80 @@ html, body {
   justify-content: center;
 }
 
+/* Fire Weapon Wrap */
+.kart-fire-wrap {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+  padding-left: 14px;
+  margin-bottom: -4px;
+  z-index: 15;
+}
+
+/* Circular Spike-Ball Weapon Button */
+.kart-item-btn {
+  position: relative;
+  width: clamp(66px, 9vw, 82px);
+  height: clamp(66px, 9vw, 82px);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(125, 211, 252, 0.65), rgba(30, 64, 175, 0.45));
+  border: 2.5px solid rgba(186, 230, 253, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.38),
+    inset 0 2px 4px rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  touch-action: none;
+  padding: 0;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.kart-fire-svg {
+  width: 82%;
+  height: 82%;
+  display: block;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.45));
+  pointer-events: none;
+}
+
+.kart-item-btn:active,
+.kart-item-btn.pressed {
+  transform: scale(0.92);
+  box-shadow:
+    0 0 28px rgba(56, 189, 248, 0.85),
+    inset 0 2px 8px rgba(255, 255, 255, 0.9);
+}
+.kart-item-btn:active .kart-fire-svg,
+.kart-item-btn.pressed .kart-fire-svg {
+  transform: rotate(18deg) scale(1.08);
+  transition: transform 0.08s ease;
+}
+
+/* Weapon Counter Badge ("6") */
+.kart-item-badge {
+  position: absolute;
+  bottom: -2px;
+  left: -2px;
+  width: clamp(22px, 3.2vw, 26px);
+  height: clamp(22px, 3.2vw, 26px);
+  border-radius: 50%;
+  background: #0284c7;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  font-family: 'Outfit', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
 /* Touch Button Base */
 .kart-arrow-btn,
 .kart-pedal-btn {
