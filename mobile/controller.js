@@ -6,37 +6,37 @@
 'use strict';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
-const RECONNECT_DELAY   = 3000;   // ms between reconnect attempts
-const PING_INTERVAL     = 2000;   // ms between pings
-const WATCHDOG_TIMEOUT  = 5000;   // ms before considering connection dead
-const STATE_INTERVAL    = 50;     // ms — send state while buttons held (20 Hz)
+const RECONNECT_DELAY = 3000;   // ms between reconnect attempts
+const PING_INTERVAL = 2000;   // ms between pings
+const WATCHDOG_TIMEOUT = 5000;   // ms before considering connection dead
+const STATE_INTERVAL = 50;     // ms — send state while buttons held (20 Hz)
 
 // ─── App State ───────────────────────────────────────────────────────────────
 const app = {
-  ws:               null,
-  ble:              null,
-  transportMode:    'ws',         // 'ws' | 'ble'
-  connected:        false,
+  ws: null,
+  ble: null,
+  transportMode: 'ws',         // 'ws' | 'ble'
+  connected: false,
   isOfflinePreview: false,
-  seq:              0,
-  pingTimer:        null,
-  pingTimestamp:    0,
-  latency:          null,
-  watchdogTimer:    null,
-  stateTimer:       null,
-  pressedKeys:      new Set(),    // current logical key set
-  joystickDirs:     new Set(),    // up/down/left/right from joystick
-  buttonKeys:       new Set(),    // keys from action buttons
-  hapticEnabled:    true,
-  mappingManager:   null,
-  joystick:         null,
-  pendingProfile:   null,         // profile selected in mapping screen
-  cruiseControl:    false,        // auto-accelerate toggle
-  turboMode:        false,        // rapid fire toggle
-  turboSpeed:       15,           // Hz: 8, 15, 22
-  turboPulse:       true,
-  turboInterval:    null,
-  autoHoldMode:     false,        // when true, single tap locks any button held down
+  seq: 0,
+  pingTimer: null,
+  pingTimestamp: 0,
+  latency: null,
+  watchdogTimer: null,
+  stateTimer: null,
+  pressedKeys: new Set(),    // current logical key set
+  joystickDirs: new Set(),    // up/down/left/right from joystick
+  buttonKeys: new Set(),    // keys from action buttons
+  hapticEnabled: true,
+  mappingManager: null,
+  joystick: null,
+  pendingProfile: null,         // profile selected in mapping screen
+  cruiseControl: false,        // auto-accelerate toggle
+  turboMode: false,        // rapid fire toggle
+  turboSpeed: 15,           // Hz: 8, 15, 22
+  turboPulse: true,
+  turboInterval: null,
+  autoHoldMode: false,        // when true, single tap locks any button held down
   autoHoldControls: new Map(),    // control -> { key, el }
 };
 
@@ -44,58 +44,58 @@ const app = {
 const $ = id => document.getElementById(id);
 
 const DOM = {
-  connectScreen:     $('connect-screen'),
-  controllerScreen:  $('controller-screen'),
-  mappingScreen:     $('mapping-screen'),
-  layoutSelect:      $('layout-select'),
-  tabWs:             $('tab-ws'),
-  tabBle:            $('tab-ble'),
-  wsForm:            $('ws-form'),
-  bleForm:           $('ble-form'),
-  bleConnectBtn:     $('ble-connect-btn'),
-  bleError:          $('ble-error'),
-  serverIp:          $('server-ip'),
-  serverPort:        $('server-port'),
-  connectBtn:        $('connect-btn'),
-  previewBtn:        $('preview-btn'),
-  connectError:      $('connect-error'),
-  connectBtnText:    document.querySelector('#connect-btn .btn-text'),
-  connectBtnLoader:  document.querySelector('#connect-btn .btn-loader'),
-  connectionDot:     $('connection-dot'),
-  connectionLabel:   $('connection-label'),
-  quickConnectBtn:   $('quick-connect-btn'),
-  latencyDisplay:    $('latency-display'),
-  profileNameDisplay:$('profile-name-display'),
-  seqNum:            $('seq-num'),
-  joystickBase:      $('joystick-base'),
-  joystickThumb:     $('joystick-thumb'),
-  disconnectBtn:     $('disconnect-btn'),
-  settingsBtn:       $('settings-btn'),
-  resetBtn:          $('reset-btn'),
-  vibrateBtn:        $('vibrate-btn'),
-  cruiseBtn:         $('cruise-btn'),
-  turboBtn:          $('turbo-btn'),
-  autolockBtn:       $('autolock-btn'),
-  editHudBtn:        $('edit-hud-btn'),
-  hudCruise:         $('hud-cruise'),
-  hudTurbo:          $('hud-turbo'),
-  hudAutohold:       $('hud-autohold'),
-  hudLockedContainer:$('hud-locked-container'),
-  openMappingBtn:    $('open-mapping-btn'),
-  mappingBackBtn:    $('mapping-back-btn'),
-  saveMappingBtn:    $('save-mapping-btn'),
-  resetDefaultsBtn:  $('reset-defaults-btn'),
-  testMappingBtn:    $('test-mapping-btn'),
-  mappingTbody:      $('mapping-tbody'),
+  connectScreen: $('connect-screen'),
+  controllerScreen: $('controller-screen'),
+  mappingScreen: $('mapping-screen'),
+  layoutSelect: $('layout-select'),
+  tabWs: $('tab-ws'),
+  tabBle: $('tab-ble'),
+  wsForm: $('ws-form'),
+  bleForm: $('ble-form'),
+  bleConnectBtn: $('ble-connect-btn'),
+  bleError: $('ble-error'),
+  serverIp: $('server-ip'),
+  serverPort: $('server-port'),
+  connectBtn: $('connect-btn'),
+  previewBtn: $('preview-btn'),
+  connectError: $('connect-error'),
+  connectBtnText: document.querySelector('#connect-btn .btn-text'),
+  connectBtnLoader: document.querySelector('#connect-btn .btn-loader'),
+  connectionDot: $('connection-dot'),
+  connectionLabel: $('connection-label'),
+  quickConnectBtn: $('quick-connect-btn'),
+  latencyDisplay: $('latency-display'),
+  profileNameDisplay: $('profile-name-display'),
+  seqNum: $('seq-num'),
+  joystickBase: $('joystick-base'),
+  joystickThumb: $('joystick-thumb'),
+  disconnectBtn: $('disconnect-btn'),
+  settingsBtn: $('settings-btn'),
+  resetBtn: $('reset-btn'),
+  vibrateBtn: $('vibrate-btn'),
+  cruiseBtn: $('cruise-btn'),
+  turboBtn: $('turbo-btn'),
+  autolockBtn: $('autolock-btn'),
+  editHudBtn: $('edit-hud-btn'),
+  hudCruise: $('hud-cruise'),
+  hudTurbo: $('hud-turbo'),
+  hudAutohold: $('hud-autohold'),
+  hudLockedContainer: $('hud-locked-container'),
+  openMappingBtn: $('open-mapping-btn'),
+  mappingBackBtn: $('mapping-back-btn'),
+  saveMappingBtn: $('save-mapping-btn'),
+  resetDefaultsBtn: $('reset-defaults-btn'),
+  testMappingBtn: $('test-mapping-btn'),
+  mappingTbody: $('mapping-tbody'),
   activeProfileMini: $('active-profile-mini'),
-  tabBtns:           document.querySelectorAll('.tab-btn'),
+  tabBtns: document.querySelectorAll('.tab-btn'),
   hudKeys: {
-    W:     $('hud-w'),
-    A:     $('hud-a'),
-    S:     $('hud-s'),
-    D:     $('hud-d'),
+    W: $('hud-w'),
+    A: $('hud-a'),
+    S: $('hud-s'),
+    D: $('hud-d'),
     SPACE: $('hud-space'),
-    E:     $('hud-e'),
+    E: $('hud-e'),
   }
 };
 
@@ -157,13 +157,13 @@ function connectWs() {
   DOM.connectBtn.disabled = true;
   hideError();
 
-  localStorage.setItem('lastIp',   ip);
+  localStorage.setItem('lastIp', ip);
   localStorage.setItem('lastPort', port);
 
   // Connection timeout failsafe
   const connectTimeout = setTimeout(() => {
     if (!app.connected && app.ws && app.ws.readyState !== WebSocket.OPEN) {
-      try { app.ws.close(); } catch (_) {}
+      try { app.ws.close(); } catch (_) { }
       showError(`Connection timed out (${ip}:${port}). Verify phone and laptop are on same Wi-Fi. (Tip: Try "Preview Offline" below!)`);
       resetConnectBtn();
     }
@@ -338,7 +338,7 @@ function startPing() {
 function stopPing() {
   clearInterval(app.pingTimer);
   clearTimeout(app.watchdogTimer);
-  app.pingTimer    = null;
+  app.pingTimer = null;
   app.watchdogTimer = null;
 }
 
@@ -375,9 +375,9 @@ function buildCurrentKeys() {
   }
 
   // 2. Joystick → keys
-  if (app.joystickDirs.has('up'))    keys.add(mapping.move_up?.key);
-  if (app.joystickDirs.has('down'))  keys.add(mapping.move_down?.key);
-  if (app.joystickDirs.has('left'))  keys.add(mapping.move_left?.key);
+  if (app.joystickDirs.has('up')) keys.add(mapping.move_up?.key);
+  if (app.joystickDirs.has('down')) keys.add(mapping.move_down?.key);
+  if (app.joystickDirs.has('left')) keys.add(mapping.move_left?.key);
   if (app.joystickDirs.has('right')) keys.add(mapping.move_right?.key);
 
   // 3. Button keys (with Rapid-Fire Turbo pulsing)
@@ -554,9 +554,9 @@ function sendCurrentState() {
 
   send({
     type: 'STATE',
-    seq:  ++app.seq,
+    seq: ++app.seq,
     keys: [...keys],
-    ts:   Date.now(),
+    ts: Date.now(),
   });
 
   if (DOM.seqNum) DOM.seqNum.textContent = app.seq;
@@ -591,21 +591,21 @@ function updateHUD(keys) {
 
   // Map key → HUD element
   const keyToHud = {
-    [mapping.move_up?.key]:    DOM.hudKeys?.W,
-    [mapping.move_left?.key]:  DOM.hudKeys?.A,
-    [mapping.move_down?.key]:  DOM.hudKeys?.S,
+    [mapping.move_up?.key]: DOM.hudKeys?.W,
+    [mapping.move_left?.key]: DOM.hudKeys?.A,
+    [mapping.move_down?.key]: DOM.hudKeys?.S,
     [mapping.move_right?.key]: DOM.hudKeys?.D,
-    [mapping.fire?.key]:       DOM.hudKeys?.SPACE,
-    [mapping.special?.key]:    DOM.hudKeys?.E,
+    [mapping.fire?.key]: DOM.hudKeys?.SPACE,
+    [mapping.special?.key]: DOM.hudKeys?.E,
   };
 
   // Update labels to match current mapping
-  if (DOM.hudKeys?.W)     DOM.hudKeys.W.textContent     = mapping.move_up?.key     || 'W';
-  if (DOM.hudKeys?.A)     DOM.hudKeys.A.textContent     = mapping.move_left?.key   || 'A';
-  if (DOM.hudKeys?.S)     DOM.hudKeys.S.textContent     = mapping.move_down?.key   || 'S';
-  if (DOM.hudKeys?.D)     DOM.hudKeys.D.textContent     = mapping.move_right?.key  || 'D';
-  if (DOM.hudKeys?.SPACE) DOM.hudKeys.SPACE.textContent = mapping.fire?.key        || 'SPC';
-  if (DOM.hudKeys?.E)     DOM.hudKeys.E.textContent     = mapping.special?.key     || 'E';
+  if (DOM.hudKeys?.W) DOM.hudKeys.W.textContent = mapping.move_up?.key || 'W';
+  if (DOM.hudKeys?.A) DOM.hudKeys.A.textContent = mapping.move_left?.key || 'A';
+  if (DOM.hudKeys?.S) DOM.hudKeys.S.textContent = mapping.move_down?.key || 'S';
+  if (DOM.hudKeys?.D) DOM.hudKeys.D.textContent = mapping.move_right?.key || 'D';
+  if (DOM.hudKeys?.SPACE) DOM.hudKeys.SPACE.textContent = mapping.fire?.key || 'SPC';
+  if (DOM.hudKeys?.E) DOM.hudKeys.E.textContent = mapping.special?.key || 'E';
 
   // Activate/deactivate
   for (const [key, el] of Object.entries(keyToHud)) {
@@ -616,19 +616,19 @@ function updateHUD(keys) {
 // ─── Connection UI ────────────────────────────────────────────────────────────
 function setConnectionUI(connected, label) {
   if (connected) {
-    if (DOM.connectionDot)   DOM.connectionDot.className     = 'status-dot connected';
+    if (DOM.connectionDot) DOM.connectionDot.className = 'status-dot connected';
     if (DOM.connectionLabel) DOM.connectionLabel.textContent = label || 'Connected';
     DOM.quickConnectBtn?.classList.add('hidden');
   } else if (app.isOfflinePreview) {
-    if (DOM.connectionDot)   DOM.connectionDot.className     = 'status-dot test-mode';
+    if (DOM.connectionDot) DOM.connectionDot.className = 'status-dot test-mode';
     if (DOM.connectionLabel) DOM.connectionLabel.textContent = 'Preview (Offline)';
     DOM.quickConnectBtn?.classList.remove('hidden');
-    if (DOM.latencyDisplay)  DOM.latencyDisplay.textContent  = '0 ms';
+    if (DOM.latencyDisplay) DOM.latencyDisplay.textContent = '0 ms';
   } else {
-    if (DOM.connectionDot)   DOM.connectionDot.className     = 'status-dot disconnected';
+    if (DOM.connectionDot) DOM.connectionDot.className = 'status-dot disconnected';
     if (DOM.connectionLabel) DOM.connectionLabel.textContent = 'Disconnected';
     DOM.quickConnectBtn?.classList.add('hidden');
-    if (DOM.latencyDisplay)  DOM.latencyDisplay.textContent  = '-- ms';
+    if (DOM.latencyDisplay) DOM.latencyDisplay.textContent = '-- ms';
   }
 }
 
@@ -674,10 +674,10 @@ function switchLayout(layoutId, notify = true) {
     }
 
     const titles = {
-      kart:    '🏎️ Kart (2 Pedals + 2 Arrows)',
-      action:  '🎮 Smash Karts / Action',
-      racing:  '🏎️ Racing Cockpit (Pedals)',
-      dpad:    '🧭 Retro 4-Way D-Pad',
+      kart: '🏎️ Horizontal Kart (4 Controls: 2 Arrows + 2 Pedals)',
+      action: '🎮 Smash Karts / Action',
+      racing: '🏎️ Racing Cockpit (Pedals)',
+      dpad: '🧭 Retro 4-Way D-Pad',
       minimal: '🚗 Simple Steer & Pedals'
     };
     if (notify) {
@@ -690,43 +690,41 @@ function switchLayout(layoutId, notify = true) {
 // ─── Action Buttons & Touch Controls ──────────────────────────────────────────
 function setupActionButtons() {
   const btns = [
-    // Layout 0: Kart Racing (2 Pedals + 2 Arrows)
-    { el: $('btn-kart-left'),   control: 'move_left'  },
-    { el: $('btn-kart-brake'),  control: 'move_down'  },
-    { el: $('btn-kart-right'),  control: 'move_right' },
-    { el: $('btn-kart-gas'),    control: 'move_up'    },
-    { el: $('btn-kart-fire'),   control: 'fire'       },
-    { el: $('btn-kart-drift'),  control: 'brake'      },
+    // Layout 0: Horizontal Kart (ONLY 4 Controls: 2 Arrows + 2 Pedals)
+    { el: $('btn-kart-left'), control: 'move_left' },
+    { el: $('btn-kart-brake'), control: 'move_down' },
+    { el: $('btn-kart-right'), control: 'move_right' },
+    { el: $('btn-kart-gas'), control: 'move_up' },
 
     // Layout 1: Smash Karts / Action
-    { el: $('btn-fire'),        control: 'fire'       },
-    { el: $('btn-e'),           control: 'special'    },
-    { el: $('btn-q'),           control: 'item'       },
-    { el: $('btn-shift'),       control: 'brake'      },
+    { el: $('btn-fire'), control: 'fire' },
+    { el: $('btn-e'), control: 'special' },
+    { el: $('btn-q'), control: 'item' },
+    { el: $('btn-shift'), control: 'brake' },
 
     // Layout 2: Racing Cockpit (Pedals + Steer)
-    { el: $('btn-pedal-gas'),   control: 'move_up'    },
-    { el: $('btn-pedal-brake'), control: 'move_down'  },
-    { el: $('btn-race-left'),   control: 'move_left'  },
-    { el: $('btn-race-right'),  control: 'move_right' },
-    { el: $('btn-race-drift'),  control: 'brake'      },
-    { el: $('btn-race-nitro'),  control: 'fire'       },
+    { el: $('btn-pedal-gas'), control: 'move_up' },
+    { el: $('btn-pedal-brake'), control: 'move_down' },
+    { el: $('btn-race-left'), control: 'move_left' },
+    { el: $('btn-race-right'), control: 'move_right' },
+    { el: $('btn-race-drift'), control: 'brake' },
+    { el: $('btn-race-nitro'), control: 'fire' },
 
     // Layout 3: Retro 4-Way D-Pad
-    { el: $('dpad-up'),         control: 'move_up'    },
-    { el: $('dpad-down'),       control: 'move_down'  },
-    { el: $('dpad-left'),       control: 'move_left'  },
-    { el: $('dpad-right'),      control: 'move_right' },
-    { el: $('btn-diamond-b'),   control: 'fire'       },
-    { el: $('btn-diamond-a'),   control: 'brake'      },
-    { el: $('btn-diamond-x'),   control: 'item'       },
-    { el: $('btn-diamond-y'),   control: 'special'    },
+    { el: $('dpad-up'), control: 'move_up' },
+    { el: $('dpad-down'), control: 'move_down' },
+    { el: $('dpad-left'), control: 'move_left' },
+    { el: $('dpad-right'), control: 'move_right' },
+    { el: $('btn-diamond-b'), control: 'fire' },
+    { el: $('btn-diamond-a'), control: 'brake' },
+    { el: $('btn-diamond-x'), control: 'item' },
+    { el: $('btn-diamond-y'), control: 'special' },
 
     // Layout 4: Simple Steer & Pedals
-    { el: $('btn-min-left'),    control: 'move_left'  },
-    { el: $('btn-min-right'),   control: 'move_right' },
-    { el: $('btn-min-gas'),     control: 'move_up'    },
-    { el: $('btn-min-brake'),   control: 'move_down'  },
+    { el: $('btn-min-left'), control: 'move_left' },
+    { el: $('btn-min-right'), control: 'move_right' },
+    { el: $('btn-min-gas'), control: 'move_up' },
+    { el: $('btn-min-brake'), control: 'move_down' },
   ];
 
   btns.forEach(({ el, control }) => {
@@ -741,7 +739,7 @@ function setupActionButtons() {
       e.preventDefault();
       const mapping = app.mappingManager?.activeMapping;
       if (!mapping) return;
-      const key  = mapping[control]?.key;
+      const key = mapping[control]?.key;
       const mode = mapping[control]?.mode || 'hold';
 
       // Disengage cruise control if braking or reversing
@@ -785,7 +783,7 @@ function setupActionButtons() {
 
       const mapping = app.mappingManager?.activeMapping;
       if (!mapping) return;
-      const key  = mapping[control]?.key;
+      const key = mapping[control]?.key;
       const mode = mapping[control]?.mode || 'hold';
 
       // If control is auto-locked, keep it locked on!
@@ -799,17 +797,17 @@ function setupActionButtons() {
       }
     };
 
-    el.addEventListener('pointerdown',  onDown, { passive: false });
-    el.addEventListener('pointerup',    onUp,   { passive: true  });
-    el.addEventListener('pointercancel',onUp,   { passive: true  });
-    el.addEventListener('contextmenu',  e => e.preventDefault());
+    el.addEventListener('pointerdown', onDown, { passive: false });
+    el.addEventListener('pointerup', onUp, { passive: true });
+    el.addEventListener('pointercancel', onUp, { passive: true });
+    el.addEventListener('contextmenu', e => e.preventDefault());
   });
 }
 
 // ─── Mapping Screen ───────────────────────────────────────────────────────────
 function renderMappingTable(profileId) {
-  const profile  = app.mappingManager.getProfile(profileId);
-  const tbody    = DOM.mappingTbody;
+  const profile = app.mappingManager.getProfile(profileId);
+  const tbody = DOM.mappingTbody;
   const mappings = profile.mappings;
 
   tbody.innerHTML = '';
@@ -837,7 +835,7 @@ function renderMappingTable(profileId) {
       <td>
         <select class="mode-select" data-control="${controlId}" data-profile="${profileId}">
           <option value="hold" ${ctrl.mode === 'hold' ? 'selected' : ''}>Hold</option>
-          <option value="tap"  ${ctrl.mode === 'tap'  ? 'selected' : ''}>Tap</option>
+          <option value="tap"  ${ctrl.mode === 'tap' ? 'selected' : ''}>Tap</option>
         </select>
       </td>
     `;
@@ -854,13 +852,13 @@ function renderMappingTable(profileId) {
 }
 
 function saveMappings(profileId) {
-  const inputs   = DOM.mappingTbody.querySelectorAll('.key-input');
-  const selects  = DOM.mappingTbody.querySelectorAll('.mode-select');
+  const inputs = DOM.mappingTbody.querySelectorAll('.key-input');
+  const selects = DOM.mappingTbody.querySelectorAll('.mode-select');
 
   inputs.forEach(input => {
     const ctrl = input.dataset.control;
     const prof = input.dataset.profile;
-    const val  = input.value.trim().toUpperCase();
+    const val = input.value.trim().toUpperCase();
     if (val) app.mappingManager.updateMapping(prof, ctrl, { key: val });
   });
 
@@ -937,7 +935,7 @@ function init() {
   app.mappingManager = new KeyMappingManager();
 
   // Auto-fill IP from current URL hostname first (most reliable on mobile Wi-Fi)
-  const lastIp   = localStorage.getItem('lastIp');
+  const lastIp = localStorage.getItem('lastIp');
   const lastPort = localStorage.getItem('lastPort');
   if (window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
     DOM.serverIp.value = window.location.hostname;
@@ -1042,6 +1040,71 @@ function init() {
 
   // Prevent scroll
   document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+
+  // Fullscreen & Horizontal Orientation Manager
+  setupFullscreenAndOrientation();
+
+  // Auto-launch preview mode if ?preview=1
+  if (window.location.search.includes('preview=1')) {
+    startOfflinePreview();
+  }
+}
+
+// ─── Fullscreen & Horizontal Orientation Manager ──────────────────────────────
+function setupFullscreenAndOrientation() {
+  const fsBtn = $('fullscreen-btn');
+  const bannerFsBtn = $('banner-fullscreen-btn');
+  const bannerCloseBtn = $('banner-close-btn');
+  const banner = $('landscape-hint-banner');
+
+  const toggleLandscapeFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        if (document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen();
+        } else if (document.documentElement.webkitRequestFullscreen) {
+          await document.documentElement.webkitRequestFullscreen();
+        }
+        if (screen.orientation && screen.orientation.lock) {
+          await screen.orientation.lock('landscape').catch(() => {});
+        }
+        toast('🏎️ Fullscreen Landscape Active', 'success');
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          await document.webkitExitFullscreen();
+        }
+        if (screen.orientation && screen.orientation.unlock) {
+          screen.orientation.unlock();
+        }
+      }
+    } catch (err) {
+      console.warn('Orientation lock or fullscreen error:', err);
+    }
+  };
+
+  fsBtn?.addEventListener('click', toggleLandscapeFullscreen);
+  bannerFsBtn?.addEventListener('click', toggleLandscapeFullscreen);
+
+  let bannerDismissed = false;
+  bannerCloseBtn?.addEventListener('click', () => {
+    bannerDismissed = true;
+    banner?.classList.add('hidden');
+  });
+
+  const checkOrientation = () => {
+    const isPortrait = window.innerHeight > window.innerWidth;
+    if (isPortrait && !bannerDismissed) {
+      banner?.classList.remove('hidden');
+    } else {
+      banner?.classList.add('hidden');
+    }
+  };
+
+  window.addEventListener('resize', checkOrientation);
+  window.addEventListener('orientationchange', checkOrientation);
+  setTimeout(checkOrientation, 300);
 }
 
 // Start when DOM is ready
