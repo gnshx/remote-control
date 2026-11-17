@@ -1875,6 +1875,119 @@ html, body {
 .btn-loader { display: inline-block; animation: spin 0.8s linear infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
+/* ── Portrait / Vertical Mode Fit-to-Screen Safeguards ── */
+@media (orientation: portrait) {
+  .status-bar {
+    flex-wrap: wrap;
+    padding: 6px 10px;
+    gap: 6px 8px;
+  }
+  .status-left {
+    gap: 6px;
+    font-size: 12px;
+  }
+  .status-right {
+    gap: 5px;
+    margin-left: auto;
+  }
+  .status-center {
+    order: 3;
+    flex: 1 0 100%;
+  }
+  .layout-select {
+    width: 100%;
+    max-width: 100%;
+    font-size: 12px;
+    padding: 5px 28px 5px 12px;
+    text-overflow: ellipsis;
+  }
+  .icon-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+  }
+  .landscape-hint-banner {
+    padding: 6px 10px;
+    gap: 8px;
+    font-size: 11px;
+  }
+  .keys-hud {
+    padding: 6px 8px;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .key-pill {
+    min-width: 30px;
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+
+  /* Ensure Kart controls fit 100% inside narrow vertical screens while keeping exact proportions */
+  #controller-screen.kart-active .controller-area,
+  #controller-screen:has(#layout-kart.active) .controller-area {
+    padding: 4px 10px 8px;
+  }
+  #layout-kart {
+    padding: 4px 4px 8px;
+    align-items: flex-end;
+  }
+  .kart-side-zone {
+    gap: 12px;
+  }
+  .kart-center-spacer {
+    min-width: 10px;
+  }
+  .kart-arrow-btn {
+    width: clamp(92px, 38vw, 155px);
+    height: auto;
+    aspect-ratio: 160 / 129;
+  }
+  .kart-pedal-btn {
+    width: clamp(70px, 29vw, 118px);
+    height: auto;
+    aspect-ratio: 121 / 82;
+  }
+  .kart-right-zone .kart-pedal-wrap {
+    margin-right: 0;
+  }
+  .kart-fire-wrap {
+    margin-right: 0;
+    margin-bottom: 12px;
+  }
+  .kart-item-btn {
+    width: clamp(56px, 22vw, 88px);
+    height: clamp(56px, 22vw, 88px);
+  }
+  .kart-item-badge {
+    width: clamp(20px, 6.5vw, 28px);
+    height: clamp(20px, 6.5vw, 28px);
+    font-size: clamp(11px, 3.2vw, 14px);
+  }
+
+  .bottom-controls {
+    justify-content: center;
+    padding: 6px 10px 10px;
+    gap: 6px;
+  }
+  .util-btn {
+    padding: 5px 9px;
+    font-size: 11px;
+  }
+
+  #toast-container {
+    top: 165px;
+    bottom: auto;
+    width: 92vw;
+  }
+  .toast {
+    white-space: normal;
+    text-align: center;
+    max-width: 100%;
+    font-size: 12px;
+    padding: 8px 14px;
+  }
+}
+
 /* ── Landscape orientation hint ── */
 @media (orientation: portrait) and (max-height: 600px) {
   .controller-area { padding: 4px 12px; }
