@@ -662,6 +662,7 @@ function switchLayout(layoutId, notify = true) {
   const target = $(`layout-${layoutId}`);
   if (target) {
     target.classList.add('active');
+    DOM.controllerScreen?.classList.toggle('kart-active', layoutId === 'kart');
     localStorage.setItem('activeLayout', layoutId);
     if (DOM.layoutSelect) DOM.layoutSelect.value = layoutId;
 

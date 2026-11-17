@@ -438,6 +438,20 @@ class HudCustomizer {
 
   _loadAll() {
     try {
+      const version = localStorage.getItem('hud_layout_version');
+      if (version !== '3') {
+        // Clear previous kart layout config so user gets the new authentic 1:1 original game sizing
+        const saved = localStorage.getItem('hud_custom_layouts');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            delete parsed.kart;
+            localStorage.setItem('hud_custom_layouts', JSON.stringify(parsed));
+          } catch (_) {}
+        }
+        localStorage.setItem('hud_layout_version', '3');
+      }
+
       const saved = localStorage.getItem('hud_custom_layouts');
       if (saved) {
         this.layoutConfigs = JSON.parse(saved);
